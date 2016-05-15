@@ -87,6 +87,6 @@ function tlinject_revert() {
 }
 
 function tlinject_about() {
-    var banner = "此站包含众包翻译。如果有句子在你悬停在上面时高亮显示，你可以点击并提交翻译。";
+    var banner = "此站使用众包翻译。如果有句子在你悬停在上面时高亮显示，你可以点击并提交翻译。";
     alert(banner);
 }
