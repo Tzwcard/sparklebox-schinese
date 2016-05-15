@@ -1,7 +1,7 @@
-TL_ENABLED_TEXT = "<a href='javascript:;' onclick='tlinject_revert()'>Disable TLs</a> " +
-                  "(<a href='javascript:;' onclick='tlinject_about()'>What's this?</a>)"
-TL_DISABLED_TEXT = "<a href='javascript:;' onclick='tlinject_activate()'>Enable TLs</a> " +
-                   "(<a href='javascript:;' onclick='tlinject_about()'>What's this?</a>)"
+TL_ENABLED_TEXT = "<a href='javascript:;' onclick='tlinject_revert()'>禁用翻译</a> " +
+                  "(<a href='javascript:;' onclick='tlinject_about()'>啥玩意？</a>)"
+TL_DISABLED_TEXT = "<a href='javascript:;' onclick='tlinject_activate()'>启用翻译</a> " +
+                   "(<a href='javascript:;' onclick='tlinject_about()'>啥东西？</a>)"
 
 function load_translations(trans, cb) {
     var xhr = new XMLHttpRequest()
