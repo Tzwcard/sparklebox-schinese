@@ -51,6 +51,6 @@ def describe_lead_skill_html(skill):
     target_attr = enums.lskill_target(skill.target_attribute)
     target_param = enums.lskill_param(skill.target_param)
 
-    built = """提升所有 {1} 偶像的 {0} <span class="let">{2}</span>%。""".format(
+    built = """提升{1}偶像的{0} <span class="let">{2}</span>%。""".format(
         target_param, target_attr, skill.up_value)
     return built
