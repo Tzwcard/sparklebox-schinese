@@ -16,7 +16,7 @@ SKILL_DESCRIPTIONS = {
     9: """使NICE音符不会中断COMBO""",
     12: """使你的生命不会减少""",
     14: """消耗 <span class="let">{1}</span> 生命，PERFECT音符获得 <span class="let">{0}</span>% 的分数加成，并且NICE/BAD音符不会中断COMBO""",
-    17: """所有PERFECT音符可使你恢复 <span class="let">{0}</span> 点生命""" }
+    17: """使所有PERFECT音符恢复你 <span class="let">{0}</span> 点生命""" }
 
 REMOVE_HTML = re.compile(r"</?span[^>]*>")
 
