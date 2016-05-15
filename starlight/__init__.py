@@ -64,6 +64,7 @@ class DataCache(object):
         self.version = version
         self.load_date = datetime.utcnow()
         self.hnd = sqlite3.connect(transient_data_path("{0}.mdb".format(version)))
+        self.class_cache = {}
         self.prime_caches()
         self.reset_statistics()
 
@@ -168,15 +169,20 @@ class DataCache(object):
         return self.prime_from_cursor(class_name, rows, **kwargs)
 
     def prime_from_cursor(self, typename, cursor, **kwargs):
-        fields = [x[0] for x in cursor.description]
-        raw_field_len = len(fields)
-        the_raw_type = namedtuple("_" + typename, fields)
-
+        the_raw_type, the_type = self.class_cache.get(typename, (None, None))
         keys = list(kwargs.keys())
-        for key in keys:
-            fields.append(key)
 
-        the_type = namedtuple(typename, fields)
+        if not the_raw_type:
+            print("trace prime_from_cursor needs to create a class")
+            fields = [x[0] for x in cursor.description]
+            raw_field_len = len(fields)
+            the_raw_type = namedtuple("_" + typename, fields)
+
+            for key in keys:
+                fields.append(key)
+
+            the_type = namedtuple(typename, fields)
+            self.class_cache[typename] = (the_raw_type, the_type)
 
         for val_list in cursor:
             temp_obj = the_raw_type(*map(clean_value, val_list))
@@ -204,6 +210,7 @@ class DataCache(object):
             valist=lambda obj: []):
             self.char_cache[p.chara_id] = p
             self.primed_this["prm_char"] += 1
+        self.primed_this["prm_char_calls"] += 1
 
     def cache_cards(self, idl):
         normalized_idl = []
@@ -229,11 +236,13 @@ class DataCache(object):
             overall_min=lambda obj: obj.vocal_min + obj.dance_min + obj.visual_min,
             overall_max=lambda obj: obj.vocal_max + obj.dance_max + obj.visual_max,
             overall_bonus=lambda obj: obj.bonus_vocal + obj.bonus_dance + obj.bonus_visual,
-            valist=lambda obj: [])
+            valist=lambda obj: [],
+            best_stat=lambda obj: max(((obj.visual_max, 1), (obj.dance_max, 2), (obj.vocal_max, 3)))[1])
 
         for p in selected:
             self.card_cache[p.id] = p
             self.primed_this["prm_card"] += 1
+        self.primed_this["prm_card_calls"] += 1
 
     def card(self, id):
         if id not in self.card_cache:
@@ -259,9 +268,7 @@ class DataCache(object):
         return ret
 
     def cards_belonging_to_char(self, id):
-        idl = self.hnd.execute("SELECT id FROM card_data WHERE chara_id == ?", (id,))
-        self.primed_this["sel_cards_for_char"] += 1
-        return [id[0] for id in idl]
+        return self.all_chara_id_to_cards().get(id, [])
 
     @lru_cache(1)
     def all_chara_id_to_cards(self):
@@ -340,7 +347,7 @@ def update_to_res_ver(res_ver):
     global is_updating_to_new_truth
 
     def ok_to_reload(path):
-        global data, last_version_check
+        global data, last_version_check, is_updating_to_new_truth
 
         is_updating_to_new_truth = 0
         last_version_check = time()
