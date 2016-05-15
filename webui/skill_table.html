@@ -21,20 +21,20 @@
         <table class="stats_table control_table">
             <tr class="toggles_row control_row">
                 <th>Show active skill types:</th>
-                <td onclick="toggle_kill_css(this)" data-kill-class="s_pl" class="vocal" title="All variants">X</td>
-                <th class="life_ax" title="All variants">Perf. Lock*</th>
-                <td onclick="toggle_kill_css(this)" data-kill-class="s_cprot" class="vocal">X</td>
-                <th class="kizuna_ax">Prot. Combo</th>
-                <td onclick="toggle_kill_css(this)" data-kill-class="s_combobonus" class="vocal">X</td>
-                <th class="vocal_ax">Combo Bonus</th>
-                <td onclick="toggle_kill_css(this)" data-kill-class="s_scorebonus" class="vocal">X</td>
-                <th class="dance_ax">Score Bonus</th>
-                <td onclick="toggle_kill_css(this)" data-kill-class="s_heal" class="vocal">X</td>
-                <th class="visual_ax">Healer</th>
-                <td onclick="toggle_kill_css(this)" data-kill-class="s_life" class="vocal">X</td>
-                <th class="max_level_ax">Guard</th>
-                <td onclick="toggle_kill_css(this)" data-kill-class="s_overload" class="vocal">X</td>
-                <th class="max_level_ax">Overload</th>
+                <td onclick="toggle_kill_css(this)" data-kill-class="s_pl" class="vocal" title="All variants">显示</td>
+                <th class="life_ax" title="All variants">强判</th>
+                <td onclick="toggle_kill_css(this)" data-kill-class="s_cprot" class="vocal">显示</td>
+                <th class="kizuna_ax">不断连</th>
+                <td onclick="toggle_kill_css(this)" data-kill-class="s_combobonus" class="vocal">显示</td>
+                <th class="vocal_ax">C分</th>
+                <td onclick="toggle_kill_css(this)" data-kill-class="s_scorebonus" class="vocal">显示</td>
+                <th class="dance_ax">P分</th>
+                <td onclick="toggle_kill_css(this)" data-kill-class="s_heal" class="vocal">显示</td>
+                <th class="visual_ax">奶妈</th>
+                <td onclick="toggle_kill_css(this)" data-kill-class="s_life" class="vocal">显示</td>
+                <th class="max_level_ax">血盾</th>
+                <td onclick="toggle_kill_css(this)" data-kill-class="s_overload" class="vocal">显示</td>
+                <th class="max_level_ax">过载</th>
             </tr>
         </table>
 
@@ -42,8 +42,8 @@
             <tr class="control_row">
                 <th></th>
                 <th class="hides_under_mobile"></th>
-                <th>{{ _("Skill Name") }}</th>
-                <th>{{ _("Effect") }}</th>
+                <th>{{ _("特技") }}</th>
+                <th>{{ _("效果") }}</th>
             </tr>
         {% for card in cards %}
             {% if card.skill %}
