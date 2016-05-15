@@ -47,7 +47,7 @@
           <span class="item left"基础数值</span>
           <span class="item ext"></span>
           <div class="item right">
-            {{ _("Regular") if _card.evolution_id else _("Transformed") }}:
+            {{ _("特训前") if _card.evolution_id else _("特训后") }}:
             Lv.
             <div class="stepper" data-stepper-max="{{ _card.rarity_dep.base_max_level }}">
               <button onclick="stats_step(this, {{ _card.id }}, -1)">-</button>
