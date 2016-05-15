@@ -94,15 +94,15 @@
   <div class="container">
     <p><s>This is temporary while I sort stuff out...</s> There is nothing more permanent than temporary.</p>
     <ul>
-      <li><a href="/skill_table">特技表</a></li>
-      <li><a href="/lead_skill_table">领队技能表</a></li>
+      <li><a href="/skill_table">按特技表检索</a></li>
+      <li><a href="/lead_skill_table">按领队技能检索</a></li>
       <li><a href="https://twitter.com/n_triangle_dev">Follow the Holy Constituency on Twitter</a></li>
       <li><a href="/static/api.html">Developers who don't want to maintain their own data should check out the API.</a></li>
     </ul>
   </div>
 
   <div class="container">
-    <p><small><a target="_blank" href="{{ handler.static_url("dots.html") }}">What are those dots for?</a></small></p>
+    <p><small><a target="_blank" href="{{ handler.static_url("dots.html") }}">这些点是干嘛的？</a></small></p>
     <div class="box black">
     {% for new_list in history %}
     {% include new_list_partial.html %}
