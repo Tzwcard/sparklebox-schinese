@@ -126,9 +126,9 @@ stat_dot = enum([
 ])
 
 stat_en = enum([
-    1, "This card's highest stat is Visual",
-    2, "This card's highest stat is Dance",
-    3, "This card's highest stat is Vocal"
+    1, "这张卡数值最高的是Visual",
+    2, "这张卡数值最高的是Dance",
+    3, "这张卡数值最高的是Vocal"
 ])
 
 # TODO need enum defs for
