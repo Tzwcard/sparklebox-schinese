@@ -19,8 +19,8 @@ function load_translations(trans, cb) {
 }
 
 function submit_tl_string(node, text) {
-    var sub = prompt("What is the English translation of '" + text + "'?\n\n" +
-        "* The string you submit may be released as part of a public data dump. These data dump(s) WILL NOT contain any metadata that can be used to identify you. If you are not okay with that, click Cancel.");
+    var sub = prompt("'" + text + "' 的翻译是啥？？？\n\n" +
+        "* 这些你提交的字串可能会被作为公共数据导出的一部分而被公开。这些数据导出【并不会】包含任何能够识别你的信息，如果你是手滑或者不同意，点取消。");
 
     if (sub === null) return
 
@@ -84,6 +84,6 @@ function tlinject_revert() {
 }
 
 function tlinject_about() {
-    var banner = "This site uses crowd-sourced translations. If a phrase highlights in grey when you hover over it, you can click to submit a translation.";
+    var banner = "此站包含众包翻译。如果有句子在你悬停在上面时高亮显示，你可以点击并提交翻译。";
     alert(banner);
 }
