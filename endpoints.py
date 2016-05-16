@@ -36,7 +36,7 @@ def icon_ex(card_id, is_lowbw=0):
         ish = """<div class="profile">
             <div class="icon icon_{rec.id} msprites m{1} {2}"></div>
             <div class="profile_text"><b>{0}</b><br>{btext}</div>
-        </div>""".format(tornado.escape.xhtml_escape(rec.chara.name),#chara.onventional
+        </div>""".format(tornado.escape.xhtml_escape(rec.chara.conventional),
             enums.stat_dot(rec.best_stat),
             "m" + enums.skill_class(rec.skill.skill_type) if rec.skill else "",
             rec=rec, btext=btext)
