@@ -177,7 +177,7 @@ if __name__ == '__main__':
 
     f = open(name_tab, "w")
     c = csv.writer(f, delimiter=",", quotechar="\"", quoting=csv.QUOTE_NONNUMERIC, lineterminator="\n")
-    c.writerow(("chara_id", "kanji", "kanji_spaced", "kana_spaced", "conventional"))
+    c.writerow(("chara_id", "kanji", "kanji_spaced", "kana_spaced", "conventional", "translated"))
 
     for key in sorted(missing):
         chara = charas[key]
@@ -206,7 +206,7 @@ if __name__ == '__main__':
         print("KANA_SPACED: ", " ".join(x.kana for x in res[0]))
         print("KANJI_SPACED:", " ".join(x.kanji for x in res[0]))
 
-        have_names[key] = (key, chara.name, " ".join(x.kanji for x in res[0]), " ".join(x.kana for x in res[0]), roma.title())
+        have_names[key] = (key, chara.name, " ".join(x.kanji for x in res[0]), " ".join(x.kana for x in res[0]), roma.title(), chara.name)
 
     for key in sorted(have_names.keys()):
         c.writerow(have_names[key])

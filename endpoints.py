@@ -88,7 +88,8 @@ class SuggestNames(HandlerSyncedWithMaster):
     def get(self):
         names = {value.conventional.lower(): [value.conventional, key] for key, value in starlight.data.names.items()}
         names.update({str(key): [value.conventional, key] for key, value in starlight.data.names.items()})
-
+        #new line not implemented
+		
         self.set_header("Content-Type", "application/json")
         self.set_header("Cache-Control", "no-cache")
         self.set_header("Expires", "0")

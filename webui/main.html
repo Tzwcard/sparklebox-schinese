@@ -34,7 +34,7 @@
       <div class="header">
         <span class="item left">活动: <b>{% raw tlable(event.name) %}</b></span>
         <span class="item ext"></span>
-        <span class="item right">于 <span class="counter" data-count-to="{{ event.end_date.timestamp() }}"> 后结束</span></span>
+        <span class="item right">结束倒计时：<span class="counter" data-count-to="{{ event.end_date.timestamp() }}">meme</span></span>
       </div>
       <div class="content" style="background:#333;">
         <div class="iconex_row">
@@ -49,7 +49,7 @@
       <div class="header">
         <span class="item left">限定卡池氪氪氪！</span>
         <span class="item ext"></span>
-        <span class="item right">于 <span class="counter" data-count-to="{{ gacha.end_date.timestamp() }}"> 后结束</span></span>
+        <span class="item right">结束倒计时：<span class="counter" data-count-to="{{ gacha.end_date.timestamp() }}">meme</span></span>
       </div>
       <div class="content" style="background:#333;text-align:left;">
         {% for ent in available %}
