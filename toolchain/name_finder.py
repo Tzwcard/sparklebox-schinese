@@ -8,7 +8,7 @@
 # All rights reserved.
 
 import locale
-locale.setlocale(locale.LC_ALL, "en_US.UTF-8")
+locale.setlocale(locale.LC_ALL, "zh_CN.UTF-8")
 
 from collections import namedtuple, Counter
 import re
