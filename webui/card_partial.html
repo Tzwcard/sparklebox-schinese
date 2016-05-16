@@ -50,7 +50,7 @@
       <div id="sb_{{ _card.id }}" class="stats box {{ enums.attribute(_card.attribute) }}"
         {% if _card.id != card.id %}style="display:none"{% end %}>
         <div class="header">
-          <span class="item left"基础数值</span>
+          <span class="item left">基础数值</span>
           <span class="item ext"></span>
           <div class="item right">
             {{ _("特训前") if _card.evolution_id else _("特训后") }}:
