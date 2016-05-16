@@ -27,7 +27,7 @@
         <span class="icon {{ enums.skill_class(card.skill.skill_type) }}"
               title="{{ _(enums.skill_type(card.skill.skill_type)) }}"></span>
         {% end %}
-        {{ chara.name }}
+        {{ card.name_only }}
         <!--{{ tle.translate_name(card.name_only) }}-->
         <span style="font-size:70%">[{{ enums.rarity(card.rarity) }}]</span>
       </span>
