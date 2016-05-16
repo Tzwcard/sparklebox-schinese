@@ -53,8 +53,8 @@
             <tr class="control_row">
                 <th></th>
                 <th class="hides_under_mobile"></th>
-                <th>{{ _("Skill Name") }}</th>
-                <th>{{ _("Effect") }}</th>
+                <th>{{ _("技能") }}</th>
+                <th>{{ _("效果") }}</th>
             </tr>
         {% for card in cards %}
             {% if card.lead_skill %}
@@ -64,7 +64,7 @@
                     <a href="/char/{{ card.chara_id }}#c_{{ card.id }}_head">{% raw icon(card.id) %}</a>
                 </td>
                 <td class="{{ enums.attribute(card.attribute) }} hides_under_mobile">
-                    <a href="/char/{{ card.chara_id }}#c_{{ card.id }}_head">{{ card.name }}<!--{{ tle.translate_name(card.name_only) }}--></a><br>
+                    <a href="/char/{{ card.chara_id }}#c_{{ card.id }}_head">{{ card.name_only }}<!--{{ tle.translate_name(card.name_only) }}--></a><br>
                         {% if card.title %}({% raw tlable(card.title) %}){% end %}
                 </td>
                 <td>{% raw tlable(card.lead_skill.name) %}</td>
