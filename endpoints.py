@@ -86,9 +86,10 @@ class Home(HandlerSyncedWithMaster):
 @route("/suggest")
 class SuggestNames(HandlerSyncedWithMaster):
     def get(self):
-        names = {value.conventional.lower(): [value.conventional, key] for key, value in starlight.data.names.items()}
-        names.update({str(key): [value.conventional, key] for key, value in starlight.data.names.items()})
-        #new line not implemented
+        names = {value.conventional.lower(): [value.kanji, key] for key, value in starlight.data.names.items()}#conventional value.conventional
+        names.update({str(key): [value.kanji, key] for key, value in starlight.data.names.items()})#chara_id
+        names.update({str(value.kana_spaced): [value.kanji, key] for key, value in starlight.data.names.items()})#kana_spaced
+        names = {str(value.translated): [value.kanji, key] for key, value in starlight.data.names.items()}#translated
 		
         self.set_header("Content-Type", "application/json")
         self.set_header("Cache-Control", "no-cache")
