@@ -36,7 +36,7 @@ def icon_ex(card_id, is_lowbw=0):
         ish = """<div class="profile">
             <div class="icon icon_{rec.id} msprites m{1} {2}"></div>
             <div class="profile_text"><b>{0}</b><br>{btext}</div>
-        </div>""".format(tornado.escape.xhtml_escape(rec.chara.conventional),
+        </div>""".format(tornado.escape.xhtml_escape(rec.chara.kanji),#chara.conventional
             enums.stat_dot(rec.best_stat),
             "m" + enums.skill_class(rec.skill.skill_type) if rec.skill else "",
             rec=rec, btext=btext)
@@ -88,8 +88,9 @@ class SuggestNames(HandlerSyncedWithMaster):
     def get(self):
         names = {value.conventional.lower(): [value.kanji, key] for key, value in starlight.data.names.items()}#conventional value.conventional
         names.update({str(key): [value.kanji, key] for key, value in starlight.data.names.items()})#chara_id
+        names.update({str(value.kanji): [value.kanji, key] for key, value in starlight.data.names.items()})#kanji
         names.update({str(value.kana_spaced): [value.kanji, key] for key, value in starlight.data.names.items()})#kana_spaced
-        names = {str(value.translated): [value.kanji, key] for key, value in starlight.data.names.items()}#translated
+        names.update({str(value.translated): [value.kanji, key] for key, value in starlight.data.names.items()})#translated
 		
         self.set_header("Content-Type", "application/json")
         self.set_header("Cache-Control", "no-cache")
