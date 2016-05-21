@@ -207,6 +207,7 @@ class DataCache(object):
             kanji_spaced = lambda obj: self.names.get(obj.chara_id).kanji_spaced,
             kana_spaced = lambda obj:  self.names.get(obj.chara_id).kana_spaced,
             conventional =lambda obj: self.names.get(obj.chara_id).conventional,
+            translated =lambda obj: self.names.get(obj.chara_id).translated,
             valist=lambda obj: []):
             self.char_cache[p.chara_id] = p
             self.primed_this["prm_char"] += 1
