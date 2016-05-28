@@ -124,6 +124,11 @@ footer {
   width: 24px;
   height: 24px;
 }
+.icon.m_ba {
+  background-position: 0 -52px;
+  width: 24px;
+  height: 24px;
+}
 .icon.s_pl {
   background-position: -56px -52px;
   width: 24px;
@@ -177,7 +182,8 @@ footer {
   .icon.s_scorebonus,
   .icon.s_heal,
   .icon.s_life,
-  .icon.s_overload {
+  .icon.s_overload,
+  .icon.m_ba {
     background-image: url(../img/smarkers@2x.png);
     background-size: 202px 144px;
     border-radius: 0px;
@@ -231,6 +237,7 @@ div.stdcon {
 th {
   font-size: 70%;
   text-transform: uppercase;
+  padding: 3px 6px;
 }
 td.vocal,
 td.vocal span {
@@ -427,37 +434,37 @@ td.Passion a {
 }
 @media screen and (max-width: 768px) {
   .carcon .card_right .name_tag {
-    min-height: 26px;
+    min-height: 28px;
   }
   .carcon .card_right .name_tag .item {
-    line-height: 26px;
+    line-height: 28px;
     font-size: 16px;
-    padding: 0 5px 0 5px;
+    padding: 0 6px 0 6px;
   }
   .carcon .card_right .name_tag .ext {
-    border-top: 13px solid transparent;
-    border-left: 6.5px solid transparent;
-    border-right: 6.5px solid transparent;
-    border-bottom: 13px solid transparent;
+    border-top: 14px solid transparent;
+    border-left: 7px solid transparent;
+    border-right: 7px solid transparent;
+    border-bottom: 14px solid transparent;
   }
   .carcon .card_right .icon {
     vertical-align: middle;
   }
 }
 .carcon .card_right .name_tag.force_small {
-  height: 26px;
+  height: 28px;
 }
 .carcon .card_right .name_tag.force_small .item {
-  line-height: 26px;
+  line-height: 28px;
   font-size: 16px;
-  padding: 0 5px 0 5px;
+  padding: 0 6px 0 6px;
 }
 .carcon .card_right .name_tag.force_small .ext {
   padding: 0;
-  border-top: 13px solid transparent;
-  border-left: 6.5px solid transparent;
-  border-right: 6.5px solid transparent;
-  border-bottom: 13px solid transparent;
+  border-top: 14px solid transparent;
+  border-left: 7px solid transparent;
+  border-right: 7px solid transparent;
+  border-bottom: 14px solid transparent;
 }
 .carcon .card_right .name_tag.force_small .icon {
   vertical-align: middle;
@@ -683,6 +690,11 @@ span.var {
 .box > .content > * {
   vertical-align: middle;
 }
+.box > .content ul {
+  margin: 0;
+  list-style-position: inside;
+  padding-left: 5px;
+}
 .box .table_stub {
   padding: 0 10px 10px;
   text-align: center;
@@ -822,7 +834,7 @@ span.var {
   display: block;
   width: 9px;
   height: 9px;
-  background: url("../img/smarkers.png") 0 -50px no-repeat;
+  background: url("../img/smarkers.png") -115px -50px no-repeat;
   content: "";
 }
 .icon.msprites.mm_vi::before {
@@ -834,6 +846,9 @@ span.var {
 .icon.msprites.mm_vo::before {
   background-position: -134px 0;
 }
+.icon.msprites.mm_ba::before {
+  background-position: -145px 0;
+}
 .icon.msprites::after {
   position: absolute;
   left: 1px;
@@ -841,7 +856,7 @@ span.var {
   display: block;
   width: 9px;
   height: 9px;
-  background: url("../img/smarkers.png") 0 -50px no-repeat;
+  background: url("../img/smarkers.png") -115px -50px no-repeat;
   content: "";
 }
 .icon.msprites.ms_pl::after {
@@ -883,4 +898,18 @@ span.var {
 .ga_unavailable td {
   background-color: #ffcccc;
   border-color: #ff6666;
+}
+strong.ga_unavailable {
+  text-decoration: line-through;
+  color: #990000;
+}
+strong.ga_available {
+  color: #267326;
+}
+.avlistentry_regular_melded li {
+  font-size: 80%;
+}
+.help {
+  border-bottom: 1px dashed;
+  cursor: help;
 }

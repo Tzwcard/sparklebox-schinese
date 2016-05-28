@@ -2,7 +2,7 @@ import re
 import sqlite3
 import pickle
 import os
-import tl_models
+import models
 import subprocess
 import sys
 from time import time
@@ -12,7 +12,7 @@ from functools import lru_cache, partial
 from collections import defaultdict, namedtuple, Counter
 from tornado import ioloop
 
-from csvloader import clean_value, load_keyed_db_file
+from csvloader import clean_value, load_keyed_db_file, load_db_file
 from . import en
 from . import apiclient
 from . import acquisition
@@ -50,13 +50,32 @@ def _scale_skill_value(max_, min_, lv):
 
 def skill_chance(prob_def, ptype):
     maxv, minv = prob_def[ptype].probability_max, prob_def[ptype].probability_min
-    return "{0}..{1}".format(_scale_skill_value(maxv, minv, 0),
+    return "{0} ~ {1}".format(_scale_skill_value(maxv, minv, 0),
                              _scale_skill_value(maxv, minv, 9))
 
 def skill_dur(dur_def, ttype):
     maxv, minv = dur_def[ttype].available_time_max, dur_def[ttype].available_time_min
-    return "{0}..{1}".format(_scale_skill_value(maxv, minv, 0),
+    return "{0} ~ {1}".format(_scale_skill_value(maxv, minv, 0),
                              _scale_skill_value(maxv, minv, 9))
+
+def determine_best_stat(vo, vi, da):
+    """Card stats are either balanced (VoViDa are around the same),
+       or one stat will be noticeably higher.
+       This function returns which one."""
+    VISUAL, DANCE, VOCAL, BALANCED = 1, 2, 3, 4
+    # for balanced cards, the ratio hi:lo will be close to 1
+    THRES = 1.2
+    stats = ((vo, VOCAL), (vi, VISUAL), (da, DANCE))
+    lo, lo_typ = min(stats)
+    hi, hi_typ = max(stats)
+    if hi / lo > THRES:
+        return hi_typ
+    else:
+        return BALANCED + hi_typ
+
+Availability = namedtuple("Availability", ("type", "name", "start", "end"))
+Availability._TYPE_GACHA = 1
+Availability._TYPE_EVENT = 2
 
 TITLE_ONLY_REGEX = r"^［(.+)］"
 NAME_ONLY_REGEX = r"^(?:［.+］)?(.+)$"
@@ -77,10 +96,10 @@ class DataCache(object):
     @lru_cache(1)
     def gacha_ids(self):
         gachas = []
-        gacha_stub_t = namedtuple("gacha_stub_t", ("id", "start_date", "end_date"))
-        for id, ss, es in self.hnd.execute("SELECT id, start_date, end_date FROM gacha_data"):
+        gacha_stub_t = namedtuple("gacha_stub_t", ("id", "name", "start_date", "end_date", "type", "subtype"))
+        for id, n, ss, es, t, t2 in self.hnd.execute("SELECT id, name, start_date, end_date, type, type_detail FROM gacha_data where type = 3 and type_detail = 1"):
             ss, es = JST(ss), JST(es)
-            gachas.append(gacha_stub_t(id, ss, es))
+            gachas.append(gacha_stub_t(id, n, ss, es, t, t2))
 
         self.primed_this["sel_gacha"] += 1
         return sorted(gachas, key=lambda x: x.start_date)
@@ -104,6 +123,15 @@ class DataCache(object):
                 select.append(stub)
         return select
 
+    def available_cards(self, gachas):
+        current = gachas
+        query = "SELECT gacha_id, reward_id FROM gacha_available WHERE gacha_id IN ({0})".format(",".join("?" * len(current)))
+        tmp = defaultdict(lambda: [])
+        [tmp[gid].append(reward) for gid, reward in self.hnd.execute(query, tuple(g.id for g in current))]
+
+        self.primed_this["sel_ac"] += 1
+        return [tmp[gacha.id] for gacha in current]
+
     def limited_availability_cards(self, gachas):
         select = [gacha.id for gacha in gachas]
         query = "SELECT gacha_id, reward_id FROM gacha_available WHERE limited_flag == 1 AND gacha_id IN ({0})".format(",".join("?" * len(select)))
@@ -115,6 +143,24 @@ class DataCache(object):
 
     def current_limited_availability(self):
         return self.limited_availability(TODAY())
+
+    def event_availability(self, cards):
+        events = {x.id: Availability(Availability._TYPE_EVENT, x.name, x.start_date, x.end_date) for x in self.event_ids()}
+        query = "SELECT event_id, reward_id FROM event_available WHERE reward_id IN ({0})".format(",".join("?" * len(cards)))
+        ea = defaultdict(lambda: [])
+
+        for event, reward in self.hnd.execute(query, cards):
+            if event in self.overridden_events:
+                continue
+            ea[reward].append(events[event])
+
+        for event, reward in self.ea_overrides:
+            if reward in cards:
+                ea[reward].append(events[event])
+
+        [v.sort(key=lambda x: x.start) for v in ea.values()]
+        self.primed_this["sel_evtreward_rev"] += 1
+        return ea
 
     def events(self, when):
         select = []
@@ -144,6 +190,8 @@ class DataCache(object):
 
     def prime_caches(self):
         self.names = self.load_names()
+        self.ea_overrides = list(load_db_file(private_data_path("event_availability_overrides.csv")))
+        self.overridden_events = set(x.event_id for x in self.ea_overrides)
 
         prob_def = self.keyed_prime_from_table("probability_type")
         time_def = self.keyed_prime_from_table("available_time_type")
@@ -240,7 +288,7 @@ class DataCache(object):
             overall_max=lambda obj: obj.vocal_max + obj.dance_max + obj.visual_max,
             overall_bonus=lambda obj: obj.bonus_vocal + obj.bonus_dance + obj.bonus_visual,
             valist=lambda obj: [],
-            best_stat=lambda obj: max(((obj.visual_max, 1), (obj.dance_max, 2), (obj.vocal_max, 3)))[1])
+            best_stat=lambda obj: determine_best_stat(obj.vocal_max, obj.visual_max, obj.dance_max))
 
         for p in selected:
             self.card_cache[p.id] = p
@@ -339,12 +387,16 @@ def do_preswitch_tasks(new_db_path, old_db_path):
         new_db_path,
         transient_data_path("names.csv")])
 
-    if old_db_path and not os.getenv("DISABLE_HISTORY_UPDATES", None):
-        history_json = subprocess.check_output(["toolchain/make_diff.py",
+    if old_db_path:
+        if not os.getenv("DISABLE_HISTORY_UPDATES", None):
+            history_json = subprocess.check_output(["toolchain/make_diff.py",
+                old_db_path,
+                new_db_path])
+            if history_json:
+                models.TranslationSQL(use_satellite=1).push_history(os.path.getmtime(new_db_path), history_json)
+        subprocess.call(["toolchain/make_contiguous_gacha.py",
             old_db_path,
             new_db_path])
-        if history_json:
-            tl_models.TranslationSQL(use_satellite=1).push_history(os.path.getmtime(old_db_path), history_json)
 
 def update_to_res_ver(res_ver):
     global is_updating_to_new_truth
@@ -422,8 +474,12 @@ def init():
     global data
     available_mdbs = sorted(list(filter(lambda x: x.endswith(".mdb"), os.listdir(transient_data_path()))), reverse=1)
     if available_mdbs:
-        print("Loading mdb:", available_mdbs[0])
-        data = DataCache(available_mdbs[0].split(".")[0])
+        try:
+            explicit_vers = int(sys.argv[1])
+        except (ValueError, IndexError):
+            explicit_vers = available_mdbs[0].split(".")[0]
+        print("Loading mdb:", explicit_vers)
+        data = DataCache(explicit_vers)
     else:
         print("No mdb, let's download one")
 

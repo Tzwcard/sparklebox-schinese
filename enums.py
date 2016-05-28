@@ -1,9 +1,13 @@
 def enum(kv):
     i = iter(kv)
     dic = dict(zip(i, i))
+    rev = {v: k for k, v in dic.items()}
 
     def f(key):
         return dic.get(key, "<missing string: {0}>".format(key))
+    def _reverse_enum(val):
+        return rev[val]
+    f.value_for_description = _reverse_enum
     return f
 
 rarity = enum([
@@ -122,13 +126,21 @@ skill_class = enum([
 stat_dot = enum([
     1, "m_vi",
     2, "m_da",
-    3, "m_vo"
+    3, "m_vo",
+    4, "m_ba",
+    5, "m_ba",
+    6, "m_ba",
+    7, "m_ba",
 ])
 
 stat_en = enum([
     1, "这张卡数值最高的是Visual",
     2, "这张卡数值最高的是Dance",
-    3, "这张卡数值最高的是Vocal"
+    3, "这张卡数值最高的是Vocal",
+    4, "这张卡数值较为均衡",
+    5, "这张卡数值较为均衡（Visual较高）",
+    6, "这张卡数值较为均衡（Dance较高）",
+    7, "这张卡数值较为均衡（Vocal较高）"
 ])
 
 # TODO need enum defs for

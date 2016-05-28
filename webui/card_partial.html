@@ -9,9 +9,9 @@
       </div>
     </div>
 
-    <p class="card_image_offlink"><a class="sprite_link" href="{{ image_host }}/chara2/{{ card.chara.chara_id }}/{{ card.pose }}.png">{{ _("查看贴图") }}</a></p>
-    <p class="card_image_offlink"><a class="petit_link" href="{{ image_host }}/puchi/{{ card.id }}.png">{{ _("ぷちデレラ（Q版）贴图") }}</a></p>
-    <p class="card_image_offlink"><a class="sprite_link" href="/card/{{ card.id }}/table">{{ _("原始数据表") }}</a></p>
+    <p class="card_image_offlink"><a class="sprite_link" target="_blank" href="{{ image_host }}/chara2/{{ card.chara.chara_id }}/{{ card.pose }}.png">{{ _("查看贴图") }}</a></p>
+    <p class="card_image_offlink"><a class="petit_link" target="_blank" href="{{ image_host }}/puchi/{{ card.id }}.png">{{ _("ぷちデレラ（Q版）贴图") }}</a></p>
+    <p class="card_image_offlink"><a href="/card/{{ card.id }}/table">{{ _("原始数据表") }}</a></p>
   </div>
   {% end %}
 
@@ -35,12 +35,12 @@
 
     {% if card.has_spread %}
     <div class="spread_view rel" style="background-image:url({{ image_host }}/spread/{{ card.id }}.png)">
-      <a class="spread_link" style="height:100%;width:100%;display:block" href="{{ image_host }}/spread/{{ card.id }}.png"></a>
+      <a class="spread_link" style="height:100%;width:100%;display:block" target="_blank" href="{{ image_host }}/spread/{{ card.id }}.png"></a>
       <div class="hang_inside">
         <a class="image_switch" href="javascript:void(0);" onclick="toggle_transform_state(this, pn(this, 4))">{{ _("切换特训状态") }}</a>
-        <a class="image_switch sprite_link" href="{{ image_host }}/chara2/{{ card.chara.chara_id }}/{{ card.pose }}.png">{{ _("查看贴图") }}</a>
-        <a class="image_switch petit_link" href="{{ image_host }}/puchi/{{ card.id }}.png">{{ _("ぷちデレラ（Q版）贴图") }}</a>
-        <a class="image_switch sprite_link" href="/card/{{ card.id }}/table">{{ _("原始数据表") }}</a>
+        <a class="image_switch sprite_link" target="_blank" href="{{ image_host }}/chara2/{{ card.chara.chara_id }}/{{ card.pose }}.png">{{ _("查看贴图") }}</a>
+        <a class="image_switch petit_link" target="_blank" href="{{ image_host }}/puchi/{{ card.id }}.png">{{ _("ぷちデレラ（Q版）贴图") }}</a>
+        <a class="image_switch" href="/card/{{ card.id }}/table">{{ _("原始数据表") }}</a>
       </div>
     </div>
     {% end %}
@@ -68,11 +68,11 @@
             <tr>
               <td rowspan="2" style="padding:0;"></td>
               <td class="life">{{ _card.hp_max }} <span style="font-size:80%">+{{ _card.bonus_hp }}</span></td>
-              <td class="vocal"><span class="var">{{ _card.vocal_min }}..{{ _card.vocal_max }}</span>
+              <td class="vocal"><span class="var">{{ _card.vocal_min }} ~ {{ _card.vocal_max }}</span>
                         <span style="font-size:80%">+{{ _card.bonus_vocal }}</span></td>
-              <td class="dance"><span class="var">{{ _card.dance_min }}..{{ _card.dance_max }}</span>
+              <td class="dance"><span class="var">{{ _card.dance_min }} ~ {{ _card.dance_max }}</span>
                         <span style="font-size:80%">+{{ _card.bonus_dance }}</span></td>
-              <td class="visual"><span class="var">{{ _card.visual_min }}..{{ _card.visual_max }}</span>
+              <td class="visual"><span class="var">{{ _card.visual_min }} ~ {{ _card.visual_max }}</span>
                          <span style="font-size:80%">+{{ _card.bonus_visual }}</span></td></tr>
 
             <tr><th class="life_ax">生命</th>
@@ -82,7 +82,7 @@
           </table>
 
           <table class="stats_table" style="display:inline-table">
-            <tr><td class="vocal">{{ _card.overall_min }}..{{ _card.overall_max }}
+            <tr><td class="vocal"><span class="var">{{ _card.overall_min }} ~ {{ _card.overall_max }}</span>
                                   <span style="font-size:80%">+{{ _card.overall_bonus }}</span></td>
               <td class="kizuna">{{ _card.rarity_dep.max_love }}</td>
               <td class="max_level">{{ _card.rarity_dep.base_max_level }}</td></tr>
@@ -95,6 +95,8 @@
       {% end %}
     </div>
     <div class="content">
+      {% include availability_partial.html %}
+
       {% if card.skill %}
       <div class="skill box {{ enums.attribute(card.attribute) }}">
         <div class="header">

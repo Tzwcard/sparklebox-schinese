@@ -48,15 +48,25 @@
       {% end %}
       {% for gacha, available in la_cards_ %}
       <div class="header">
+<<<<<<< HEAD
         <span class="item left">限定卡池氪氪氪！</span>
+=======
+        {% if available %}
+        <span class="item left">Limited availability!</span>
+        {% else %}
+        <span class="item left">Current gacha</span>
+        {% end %}
+>>>>>>> bc7059af3a97282ee06cc0d68ea3f07c9d7e8555
         <span class="item ext"></span>
         <span class="item right">结束倒计时：<span class="counter" data-count-to="{{ gacha.end_date.timestamp() }}">meme</span></span>
       </div>
+      {% if available %}
       <div class="content" style="background:#333;text-align:left;">
         {% for ent in available %}
         {% raw icon_ex(ent, request.is_low_bandwidth) %}
         {% end %}
       </div>
+      {% end %}
       {% end %}
     </div>
     {% end %}
