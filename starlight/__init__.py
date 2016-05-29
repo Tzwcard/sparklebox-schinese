@@ -50,12 +50,12 @@ def _scale_skill_value(max_, min_, lv):
 
 def skill_chance(prob_def, ptype):
     maxv, minv = prob_def[ptype].probability_max, prob_def[ptype].probability_min
-    return "{0}..{1}".format(_scale_skill_value(maxv, minv, 0),
+    return "{0} ~ {1}".format(_scale_skill_value(maxv, minv, 0),
                              _scale_skill_value(maxv, minv, 9))
 
 def skill_dur(dur_def, ttype):
     maxv, minv = dur_def[ttype].available_time_max, dur_def[ttype].available_time_min
-    return "{0}..{1}".format(_scale_skill_value(maxv, minv, 0),
+    return "{0} ~ {1}".format(_scale_skill_value(maxv, minv, 0),
                              _scale_skill_value(maxv, minv, 9))
 
 def determine_best_stat(vo, vi, da):
