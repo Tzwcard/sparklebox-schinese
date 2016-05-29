@@ -88,6 +88,7 @@ class DataCache(object):
         self.class_cache = {}
         self.prime_caches()
         self.reset_statistics()
+        self.load_date_jst = datetime.now(_JST).strftime('%Y-%m-%d %H:%M:%S.%f (JST)')# Just like utc format
 
     def reset_statistics(self):
         self.vc_this = 0
