@@ -22,10 +22,10 @@
     <div class="stdcon chara_header">
       <table class="stats_table control_table">
         <tr class="toggles_row">
-          <th>Card Rarity</th>
-          <td onclick="toggle_kill_css(this)" data-kill-class="SSR" class="vocal">X</td>
-          <td onclick="toggle_kill_css(this)" data-kill-class="SR" class="vocal">X</td>
-          <td onclick="toggle_kill_css(this)" data-kill-class="Rare" class="vocal">X</td>
+          <th>按卡牌稀有度筛选:</th>
+          <td onclick="toggle_kill_css(this)" data-kill-class="SSR" class="vocal">○</td>
+          <td onclick="toggle_kill_css(this)" data-kill-class="SR" class="vocal">○</td>
+          <td onclick="toggle_kill_css(this)" data-kill-class="Rare" class="vocal">○</td>
         </tr>
         <tr>
           <th>&nbsp;</th>
@@ -36,24 +36,24 @@
       </table>
 	  <table class="stats_table control_table">
         <tr class="toggles_row">
-          <th>Skill Type</th>
-          <td onclick="toggle_kill_css(this)" data-kill-class="s_pl" class="vocal" title="All variants">X</td>
-          <td onclick="toggle_kill_css(this)" data-kill-class="s_cprot" class="vocal">X</td>
-          <td onclick="toggle_kill_css(this)" data-kill-class="s_combobonus" class="vocal">X</td>
-          <td onclick="toggle_kill_css(this)" data-kill-class="s_scorebonus" class="vocal">X</td>
-          <td onclick="toggle_kill_css(this)" data-kill-class="s_heal" class="vocal">X</td>
-          <td onclick="toggle_kill_css(this)" data-kill-class="s_life" class="vocal">X</td>
-          <td onclick="toggle_kill_css(this)" data-kill-class="s_overload" class="vocal">X</td>
+          <th>按特技类型筛选:</th>
+          <td onclick="toggle_kill_css(this)" data-kill-class="s_pl" class="vocal" title="All variants">○</td>
+          <td onclick="toggle_kill_css(this)" data-kill-class="s_cprot" class="vocal">○</td>
+          <td onclick="toggle_kill_css(this)" data-kill-class="s_combobonus" class="vocal">○</td>
+          <td onclick="toggle_kill_css(this)" data-kill-class="s_scorebonus" class="vocal">○</td>
+          <td onclick="toggle_kill_css(this)" data-kill-class="s_heal" class="vocal">○</td>
+          <td onclick="toggle_kill_css(this)" data-kill-class="s_life" class="vocal">○</td>
+          <td onclick="toggle_kill_css(this)" data-kill-class="s_overload" class="vocal">○</td>
         </tr>
         <tr>
           <th>&nbsp;</th>
-          <th title="All variants">Perf. Lock*</th>
-          <th>Prot. Combo</th>
-          <th>Combo Bonus</th>
-          <th>Score Bonus</th>
-          <th>Healer</th>
-          <th>Guard</th>
-          <th>Overload</th>
+          <th title="All variants">强判 </th>
+          <th>不断连</th>
+          <th>C分</th>
+          <th>P分</th>
+          <th>奶妈</th>
+          <th>血盾</th>
+          <th>过载</th>
         </tr>
       </table>
     </div>
@@ -62,8 +62,8 @@
       <tr class="control_row">
         <th></th>
         <th class="hides_under_mobile"></th>
-        <th>{{ _("Skill Name") }}</th>
-        <th>{{ _("Effect") }}</th>
+        <th>{{ _("特技名") }}</th>
+        <th>{{ _("效果") }}</th>
       </tr>
     {% for card in cards %}
       {% if card.skill %}
@@ -73,7 +73,7 @@
           <a href="/char/{{ card.chara_id }}#c_{{ card.id }}_head">{% raw icon(card.id) %}</a>
         </td>
         <td class="{{ enums.attribute(card.attribute) }} hides_under_mobile">
-          <a href="/char/{{ card.chara_id }}#c_{{ card.id }}_head">{{ tle.translate_name(card.name_only) }}</a><br>
+          <a href="/char/{{ card.chara_id }}#c_{{ card.id }}_head">{{ card.name_only }}<!--{{ tle.translate_name(card.name_only) }}--></a><br>
             {% if card.title %}({% raw tlable(card.title) %}){% end %}
         </td>
         <td>{% raw tlable(card.skill.skill_name) %}</td>

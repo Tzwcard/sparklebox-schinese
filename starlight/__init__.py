@@ -50,12 +50,12 @@ def _scale_skill_value(max_, min_, lv):
 
 def skill_chance(prob_def, ptype):
     maxv, minv = prob_def[ptype].probability_max, prob_def[ptype].probability_min
-    return "{0}..{1}".format(_scale_skill_value(maxv, minv, 0),
+    return "{0} ~ {1}".format(_scale_skill_value(maxv, minv, 0),
                              _scale_skill_value(maxv, minv, 9))
 
 def skill_dur(dur_def, ttype):
     maxv, minv = dur_def[ttype].available_time_max, dur_def[ttype].available_time_min
-    return "{0}..{1}".format(_scale_skill_value(maxv, minv, 0),
+    return "{0} ~ {1}".format(_scale_skill_value(maxv, minv, 0),
                              _scale_skill_value(maxv, minv, 9))
 
 def determine_best_stat(vo, vi, da):
@@ -88,6 +88,7 @@ class DataCache(object):
         self.class_cache = {}
         self.prime_caches()
         self.reset_statistics()
+        self.load_date_jst = datetime.now(_JST).strftime('%Y-%m-%d %H:%M:%S.%f (JST)')# Just like utc format
 
     def reset_statistics(self):
         self.vc_this = 0
@@ -257,6 +258,7 @@ class DataCache(object):
             kanji_spaced = lambda obj: self.names.get(obj.chara_id).kanji_spaced,
             kana_spaced = lambda obj:  self.names.get(obj.chara_id).kana_spaced,
             conventional =lambda obj: self.names.get(obj.chara_id).conventional,
+            translated =lambda obj: self.names.get(obj.chara_id).translated,
             valist=lambda obj: []):
             self.char_cache[p.chara_id] = p
             self.primed_this["prm_char"] += 1

@@ -36,7 +36,7 @@ def icon_ex(card_id, is_lowbw=0, collapsible=0):
         ish = """<div class="profile">
             <div class="icon icon_{rec.id} msprites m{1} {2}"></div>
             <div class="profile_text {3}"><b>{0}</b><br>{btext}</div>
-        </div>""".format(tornado.escape.xhtml_escape(rec.chara.conventional),
+        </div>""".format(tornado.escape.xhtml_escape(rec.chara.name),#chara.conventional
             enums.stat_dot(rec.best_stat),
             "m" + enums.skill_class(rec.skill.skill_type) if rec.skill else "",
             "hides_under_mobile" if collapsible else "",
@@ -86,9 +86,12 @@ class Home(HandlerSyncedWithMaster):
 @route("/suggest")
 class SuggestNames(HandlerSyncedWithMaster):
     def get(self):
-        names = {value.conventional.lower(): [value.conventional, key] for key, value in starlight.data.names.items()}
-        names.update({str(key): [value.conventional, key] for key, value in starlight.data.names.items()})
-
+        names = {value.conventional.lower(): [value.kanji, key] for key, value in starlight.data.names.items()}#conventional value.conventional
+        names.update({str(key): [value.kanji, key] for key, value in starlight.data.names.items()})#chara_id
+        names.update({str(value.kanji): [value.kanji, key] for key, value in starlight.data.names.items()})#kanji
+        names.update({str(value.kana_spaced): [value.kanji, key] for key, value in starlight.data.names.items()})#kana_spaced
+        names.update({str(value.translated): [value.kanji, key] for key, value in starlight.data.names.items()})#translated
+		
         self.set_header("Content-Type", "application/json")
         self.set_header("Cache-Control", "no-cache")
         self.set_header("Expires", "0")
@@ -279,7 +282,7 @@ class DebugGachaPresenceUpdate(tornado.web.RequestHandler):
         self.write("ok")
 
 @route(r"/tl_debug")
-@dev_mode_only
+#@dev_mode_only
 class DebugViewTLs(tornado.web.RequestHandler):
     def get(self):
         #chara_id = int(chara_id)
@@ -303,3 +306,4 @@ class DebugViewTLExtreme(tornado.web.RequestHandler):
         self.set_header("Content-Type", "text/html")
         self.render("debug_view_database.html", data=gen,
                     fields=fields, **self.settings)
+

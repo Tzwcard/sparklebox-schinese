@@ -29,35 +29,37 @@ attribute = enum([
 ])
 
 skill_type = enum([
-    1, "Perfect Score Bonus",
-    2, "Score Bonus",
-    4, "Combo Bonus",
-    5, "Lesser Perfect Lock",
-    6, "Greater Perfect Lock",
-    7, "Extreme Perfect Lock",
-    9, "Combo Support",
-    12, "Life Support",
-    14, "Overload",
-    17, "Healer",
+    1, "PERFECT分数加成",
+    2, "PERFECT/GREAT分数加成",
+    4, "COMBO加成",
+    5, "GREAT改PERFECT",
+    6, "GREAT/NICE改PERFECT",
+    7, "GREAT/NICE/BAD改PERFECT",
+    9, "COMBO不中断",
+    12, "锁血",
+    14, "过载",
+    17, "恢复生命",
 ])
 
 skill_probability = enum([
-    2, "small",
-    3, "fair",
-    4, "high",
+    2, "小概率",
+    3, "中概率",
+    4, "高概率",
 ])
 
 skill_length_type = enum([
-    3, "short",
-    4, "medium",
-    5, "long",
+    1, "一瞬间",
+    2, "较短时间",
+    3, "短时间",
+    4, "稍长时间",
+    5, "较长时间",
 ])
 
 lskill_target = enum([
-    1, "all Cute",
-    2, "all Cool",
-    3, "all Passion",
-    4, "all",
+    1, "所有Cute",
+    2, "所有Cool",
+    3, "所有Passion",
+    4, "所有",
 ])
 
 lskill_effective_target = enum([
@@ -68,12 +70,12 @@ lskill_effective_target = enum([
 ])
 
 lskill_param = enum([
-    1, "the Vocal appeal",
-    2, "the Visual appeal",
-    3, "the Dance appeal",
-    4, "all appeals",
-    5, "the life",
-    6, "the skill probability",
+    1, "Vocal表现值",
+    2, "Visual表现值",
+    3, "Dance表现值",
+    4, "全表现值",
+    5, "生命",
+    6, "技能发动概率",
 ])
 
 lskill_effective_param = enum([
@@ -132,13 +134,13 @@ stat_dot = enum([
 ])
 
 stat_en = enum([
-    1, "This card's highest stat is Visual",
-    2, "This card's highest stat is Dance",
-    3, "This card's highest stat is Vocal",
-    4, "This card's stats are mostly balanced",
-    5, "This card's stats are mostly balanced (Visual high)",
-    6, "This card's stats are mostly balanced (Dance high)",
-    7, "This card's stats are mostly balanced (Vocal high)"
+    1, "这张卡数值最高的是Visual",
+    2, "这张卡数值最高的是Dance",
+    3, "这张卡数值最高的是Vocal",
+    4, "这张卡数值较为均衡",
+    5, "这张卡数值较为均衡（Visual较高）",
+    6, "这张卡数值较为均衡（Dance较高）",
+    7, "这张卡数值较为均衡（Vocal较高）"
 ])
 
 # TODO need enum defs for
