@@ -22,10 +22,10 @@
     <div class="stdcon chara_header">
       <table class="stats_table control_table">
         <tr class="toggles_row">
-          <th>Card Rarity</th>
-          <td onclick="toggle_kill_css(this)" data-kill-class="SSR" class="vocal">X</td>
-          <td onclick="toggle_kill_css(this)" data-kill-class="SR" class="vocal">X</td>
-          <td onclick="toggle_kill_css(this)" data-kill-class="Rare" class="vocal">X</td>
+          <th>按卡牌稀有度筛选:</th>
+          <td onclick="toggle_kill_css(this)" data-kill-class="SSR" class="vocal">○</td>
+          <td onclick="toggle_kill_css(this)" data-kill-class="SR" class="vocal">○</td>
+          <td onclick="toggle_kill_css(this)" data-kill-class="Rare" class="vocal">○</td>
         </tr>
         <tr>
           <th>&nbsp;</th>
@@ -36,15 +36,15 @@
       </table>
       <table class="stats_table control_table">
         <tr class="toggles_row">
-          <th>Target Type</th>
-          <td onclick="toggle_kill_css(this)" data-kill-class="ca_all" class="vocal" title="All variants">X</td>
-          <td onclick="toggle_kill_css(this)" data-kill-class="ca_cute" class="vocal">X</td>
-          <td onclick="toggle_kill_css(this)" data-kill-class="ca_passion" class="vocal">X</td>
-          <td onclick="toggle_kill_css(this)" data-kill-class="ca_cool" class="vocal">X</td>
+          <th>按对象属性筛选:</th>
+          <td onclick="toggle_kill_css(this)" data-kill-class="ca_all" class="vocal" title="All variants">○</td>
+          <td onclick="toggle_kill_css(this)" data-kill-class="ca_cute" class="vocal">○</td>
+          <td onclick="toggle_kill_css(this)" data-kill-class="ca_passion" class="vocal">○</td>
+          <td onclick="toggle_kill_css(this)" data-kill-class="ca_cool" class="vocal">○</td>
         </tr>
         <tr>
           <th>&nbsp;</th>
-          <th>All</th>
+          <th>全属性</th>
           <th>Cute</th>
           <th>Passion</th>
           <th>Cool</th>
@@ -52,24 +52,24 @@
       </table>
       <table class="stats_table control_table">
         <tr class="toggles_row">
-          <th>Target Stat</th>
-          <td onclick="toggle_kill_css(this)" data-kill-class="ce_vocal" class="vocal">X</td>
-          <td onclick="toggle_kill_css(this)" data-kill-class="ce_visual" class="vocal">X</td>
-          <td onclick="toggle_kill_css(this)" data-kill-class="ce_dance" class="vocal">X</td>
-          <td onclick="toggle_kill_css(this)" data-kill-class="ce_anyappeal" class="vocal">X</td>
+          <th>按对象数值筛选:</th>
+          <td onclick="toggle_kill_css(this)" data-kill-class="ce_vocal" class="vocal">○</td>
+          <td onclick="toggle_kill_css(this)" data-kill-class="ce_visual" class="vocal">○</td>
+          <td onclick="toggle_kill_css(this)" data-kill-class="ce_dance" class="vocal">○</td>
+          <td onclick="toggle_kill_css(this)" data-kill-class="ce_anyappeal" class="vocal">○</td>
           <td><!-- dummy --></td>
-          <td onclick="toggle_kill_css(this)" data-kill-class="ce_life" class="vocal">X</td>
-          <td onclick="toggle_kill_css(this)" data-kill-class="ce_skill" class="vocal">X</td>
+          <td onclick="toggle_kill_css(this)" data-kill-class="ce_life" class="vocal">○</td>
+          <td onclick="toggle_kill_css(this)" data-kill-class="ce_skill" class="vocal">○</td>
         </tr>
         <tr>
           <th>&nbsp;</th>
           <th>Vocal</th>
           <th>Visual</th>
           <th>Dance</th>
-          <th>All</th>
+          <th>全表现值</th>
           <th><!-- dummy --></th>
-          <th>Life</th>
-          <th>Skill Prob.</th>
+          <th>生命</th>
+          <th>特技概率</th>
         </tr>
       </table>
     </div>
@@ -78,8 +78,8 @@
       <tr class="control_row">
         <th></th>
         <th class="hides_under_mobile"></th>
-        <th>{{ _("Skill Name") }}</th>
-        <th>{{ _("Effect") }}</th>
+        <th>{{ _("特技名") }}</th>
+        <th>{{ _("效果") }}</th>
       </tr>
     {% for card in cards %}
       {% if card.lead_skill %}
@@ -90,7 +90,7 @@
           <a href="/char/{{ card.chara_id }}#c_{{ card.id }}_head">{% raw icon(card.id) %}</a>
         </td>
         <td class="{{ enums.attribute(card.attribute) }} hides_under_mobile">
-          <a href="/char/{{ card.chara_id }}#c_{{ card.id }}_head">{{ tle.translate_name(card.name_only) }}</a><br>
+          <a href="/char/{{ card.chara_id }}#c_{{ card.id }}_head">{{ card.name_only }}<!--{{ tle.translate_name(card.name_only) }}--></a><br>
             {% if card.title %}({% raw tlable(card.title) %}){% end %}
         </td>
         <td>{% raw tlable(card.lead_skill.name) %}</td>

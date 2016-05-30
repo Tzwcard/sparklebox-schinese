@@ -21,7 +21,7 @@
 
 <body>
   <div class="container">
-    <input type="text" id="search" placeholder="{{ _("Search for idols") }}" onkeyup="suggest(this, this.value)">
+    <input type="text" id="search" placeholder="{{ _("搜索爱豆") }}" onkeyup="suggest(this, this.value)">
     <div id="suggestions"></div>
   </div>
 
@@ -33,13 +33,13 @@
     <div class="box black">
       {% for event, reward_list in events_ %}
       <div class="header">
-        <span class="item left">Event: <b>{% raw tlable(event.name) %}</b></span>
+        <span class="item left">活动: <b>{% raw tlable(event.name) %}</b></span>
         <span class="item ext"></span>
-        <span class="item right">ends in <span class="counter" data-count-to="{{ event.end_date.timestamp() }}">meme</span></span>
+        <span class="item right">结束倒计时：<span class="counter" data-count-to="{{ event.end_date.timestamp() }}">meme</span></span>
       </div>
       <div class="content" style="background:#333;">
         <div class="iconex_row">
-          <span>You'd better start spending. <br> Event rewards:</span>
+          <span>开始肝吧。<br>活动奖励:</span>
           {% for cid in reward_list %}
           {% raw icon_ex(cid, request.is_low_bandwidth) %}
           {% end %}
@@ -49,12 +49,12 @@
       {% for gacha, available in la_cards_ %}
       <div class="header">
         {% if available %}
-        <span class="item left">Limited availability!</span>
+        <span class="item left">限定卡池氪氪氪！</span>
         {% else %}
-        <span class="item left">Current gacha</span>
+        <span class="item left">目前卡池</span>
         {% end %}
         <span class="item ext"></span>
-        <span class="item right">expires in <span class="counter" data-count-to="{{ gacha.end_date.timestamp() }}">meme</span></span>
+        <span class="item right">结束倒计时：<span class="counter" data-count-to="{{ gacha.end_date.timestamp() }}">meme</span></span>
       </div>
       {% if available %}
       <div class="content" style="background:#333;text-align:left;">
@@ -72,16 +72,16 @@
     <div class="box black">
       <div class="contents">
         <center id="splash"><p>This is your working space.<br>
-                   Card stats can be compared by searching for them above.</p>
+                   卡牌数值可从上方搜索以对比。</p>
         </center>
         <table id="workspace_table" class="table">
           <tr>
-            <th colspan="2">Idol</th>
-            <th>Life</th>
-            <th>Vo</th>
-            <th>Vi</th>
-            <th>Da</th>
-            <th>Skill</th>
+            <th colspan="2">偶像</th>
+            <th>生命</th>
+            <th>Vocal</th>
+            <th>Visual</th>
+            <th>Dance</th>
+            <th>特技</th>
           </tr>
           <tr id="compare_idol_template" style="display:none">
             <td id="ci_icon" style="width:1%">{% raw icon(0) %}</td>
@@ -101,15 +101,15 @@
   <div class="container">
     <p><s>This is temporary while I sort stuff out...</s> There is nothing more permanent than temporary.</p>
     <ul>
-      <li><a href="/skill_table">Skills table</a></li>
-      <li><a href="/lead_skill_table">Lead skills table</a></li>
+      <li><a href="/skill_table">按特技检索</a></li>
+      <li><a href="/lead_skill_table">按领队技能检索</a></li>
       <li><a href="https://twitter.com/n_triangle_dev">Follow the Holy Constituency on Twitter</a></li>
       <li><a href="/static/api.html">Developers who don't want to maintain their own data should check out the API.</a></li>
     </ul>
   </div>
 
   <div class="container">
-    <p><small><a target="_blank" href="{{ handler.static_url("dots.html") }}">What are those dots for?</a></small></p>
+    <p><small><a target="_blank" href="{{ handler.static_url("dots.html") }}">这些点是干嘛的？</a></small></p>
     <div class="box black">
     {% for new_list in history %}
     {% include new_list_partial.html %}
@@ -118,7 +118,7 @@
   </div>
 
   <div class="container">
-    <p><a href="/history">&gt; Previous additions</a></p>
+    <p><a href="/history">&gt; 往期加入卡牌</a></p>
   </div>
 
   {% include footer.html %}
