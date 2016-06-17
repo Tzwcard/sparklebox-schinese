@@ -30,15 +30,27 @@ attribute = enum([
 
 skill_type = enum([
     1, "PERFECT分数加成",
-    2, "PERFECT/GREAT分数加成",
+    2, "分数加成",
+    3, "分数加成",
+
     4, "COMBO加成",
-    5, "GREAT改PERFECT",
-    6, "GREAT/NICE改PERFECT",
-    7, "GREAT/NICE/BAD改PERFECT",
-    9, "COMBO不中断",
+
+    5, "初级强判",
+    6, "中级强判",
+    7, "高级强判",
+    8, "无条件强判",
+
+    9, "COMBO保护",
+    10, "高级COMBO保护",
+    11, "无条件COMBO保护",
+
     12, "锁血",
+    13, "无条件补血",
     14, "过载",
+
     17, "恢复生命",
+    18, "恢复生命",
+    19, "恢复生命",
 ])
 
 skill_probability = enum([
@@ -112,15 +124,27 @@ lskill_target_param = enum([
 
 skill_class = enum([
     1, "s_scorebonus",
-    17, "s_heal",
-    4, "s_combobonus",
-    5, "s_pl",
-    9, "s_cprot",
-    7, "s_pl",
     2, "s_scorebonus",
+    3, "s_scorebonus",
+
+    4, "s_combobonus",
+
+    5, "s_pl",
     6, "s_pl",
+    7, "s_pl",
+    8, "s_pl",
+
+    9, "s_cprot",
+    10, "s_cprot",
+    11, "s_cprot",
+
     12, "s_life",
+    13, "s_heal",
     14, "s_overload",
+
+    17, "s_heal",
+    18, "s_heal",
+    19, "s_heal",
 ])
 
 stat_dot = enum([

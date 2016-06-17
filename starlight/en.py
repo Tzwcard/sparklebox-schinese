@@ -45,14 +45,22 @@ def gap_date_range(a):
 SKILL_DESCRIPTIONS = {
     1: """使所有PERFECT音符获得 <span class="let">{0}</span>% 的分数加成""",
     2: """使所有PERFECT/GREAT音符获得 <span class="let">{0}</span>% 的分数加成""",
+    3: """使所有PERFECT/GREAT/NICE音符获得 <span class="let">{0}</span>% 的分数加成""", #provisional
     4: """获得额外的 <span class="let">{0}</span>% 的COMBO加成""",
     5: """使所有GREAT音符改判为PERFECT""",
     6: """使所有GREAT/NICE音符改判为PERFECT""",
     7: """使所有GREAT/NICE/BAD音符改判为PERFECT""",
+    8: """所有音符改判为PERFECT""", #provisional
     9: """使NICE音符不会中断COMBO""",
+    10: """使BAD/NICE音符不会中断COMBO""", #provisional
+    11: """使你的COMBO不会中断""", #provisional
     12: """使你的生命不会减少""",
+    13: """使所有音符恢复你 <span class="let">{0}</span> 点生命""", #provisional
     14: """消耗 <span class="let">{1}</span> 生命，PERFECT音符获得 <span class="let">{0}</span>% 的分数加成，并且NICE/BAD音符不会中断COMBO""",
     17: """使所有PERFECT音符恢复你 <span class="let">{0}</span> 点生命""" }
+    18: """使所有PERFECT/GREAT音符恢复你 <span class="let">{0}</span> 点生命""", #provisional
+    19: """使所有PERFECT/GREAT/NICE音符恢复你 <span class="let">{0}</span> 点生命""", #provisional
+}
 
 REMOVE_HTML = re.compile(r"</?span[^>]*>")
 
@@ -66,7 +74,7 @@ def describe_skill_html(skill):
     fire_interval = skill.condition
     effect_val = skill.value
     # TODO symbols
-    if skill.skill_type in [1, 2, 4, 14]:
+    if skill.skill_type in [1, 2, 3, 4, 14]:
         effect_val -= 100
 
     effect_clause = SKILL_DESCRIPTIONS.get(
