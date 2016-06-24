@@ -4,4 +4,6 @@
   <a href="/skill_table">按特技</a>
   <a href="/lead_skill_table">按领队技能</a>
   <a href="/history">按加入日期</a>
+  {% from urllib.parse import urlparse, urljoin %}
+  <a href="{{ urljoin('https://starlight.kirara.ca', request.path ) }}">English</a>
 </div>
