@@ -94,7 +94,7 @@ def describe_lead_skill_html(skill):
         target_attr = enums.lskill_target(skill.target_attribute)
         target_param = enums.lskill_param(skill.target_param)
 
-        effect_clause = """提升{1}偶像的{0} <span class="let">{2}</span>%""".format(
+        effect_clause = """提升{1}偶像的{0} <span class="let">{2}</span>%。""".format(
             target_param, target_attr, skill.up_value)
 
         need_list = []
@@ -111,7 +111,7 @@ def describe_lead_skill_html(skill):
             predicate_clause = """当{0}属性的偶像存在于队伍时，""".format(need_str)
             built = "".join((predicate_clause, effect_clause))
         else:
-            built = effect_clause + "。"
+            built = effect_clause
         return built
     else:
         return """此队长技能的内部描述格式未定义，请将此汇报为BUG。(up_type: {0}, type: {1})""".format(
