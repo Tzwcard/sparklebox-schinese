@@ -106,8 +106,8 @@ def describe_lead_skill_html(skill):
             need_list.append("Passion")
 
         if need_list:
-            need_str = ", ".join(need_list[:-1])
-            need_str = "{0}, and {1}".format(need_str, need_list[-1])
+            need_str = "、".join(need_list[:-1])
+            need_str = "{0}和{1}".format(need_str, need_list[-1])
             predicate_clause = """当{0}属性的偶像存在于队伍时，""".format(need_str)
             built = "".join((predicate_clause, effect_clause))
         else:
