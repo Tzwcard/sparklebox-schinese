@@ -4,7 +4,7 @@ import os
 import enums
 import re
 
-NO_STRING_FMT = "<Voice ID {0}:6:{1} has no transcript, but you can still submit a translation for it.>"
+NO_STRING_FMT = "<语音 ID {0}:6:{1} 没有预设文本，但是你仍然可提交它的翻译。>"
 
 def westernized_name(chara):
     """Our conventionals are ordered Last First, but project-imas uses First Last."""
@@ -86,15 +86,34 @@ def describe_skill_html(skill):
     length_clause = """，持续 <span class="var">{0}</span> 秒。""".format(
         skill.dur())
 
-    return " ".join((interval_clause, probability_clause, effect_clause, length_clause))
+    return "".join((interval_clause, probability_clause, effect_clause, length_clause))
 
 
 def describe_lead_skill_html(skill):
-    assert skill.up_type == 1 and skill.type == 20
+    if skill.up_type == 1 and skill.type == 20:
+        target_attr = enums.lskill_target(skill.target_attribute)
+        target_param = enums.lskill_param(skill.target_param)
 
-    target_attr = enums.lskill_target(skill.target_attribute)
-    target_param = enums.lskill_param(skill.target_param)
+        effect_clause = """提升{1}偶像的{0} <span class="let">{2}</span>%""".format(
+            target_param, target_attr, skill.up_value)
 
-    built = """提升{1}偶像的{0} <span class="let">{2}</span>%。""".format(
-        target_param, target_attr, skill.up_value)
-    return built
+        need_list = []
+        if skill.need_cute:
+            need_list.append("Cute")
+        if skill.need_cool:
+            need_list.append("Cool")
+        if skill.need_passion:
+            need_list.append("Passion")
+
+        if need_list:
+            need_str = ", ".join(need_list[:-1])
+            need_str = "{0}, and {1}".format(need_str, need_list[-1])
+            predicate_clause = """当{0}属性的偶像存在于队伍时，""".format(need_str)
+            built = "".join((predicate_clause, effect_clause))
+        else:
+            built = effect_clause + "。"
+        return built
+    else:
+        return """此队长技能的内部描述格式未定义，请将此汇报为BUG。(up_type: {0}, type: {1})""".format(
+            skill.up_type, skill.type
+        )
