@@ -474,6 +474,7 @@ def check_version_api_recv(response, msg):
             update_to_res_ver(res_ver)
         else:
             print("no required_res_ver, did the app get a forced update?")
+            print("current APP_VER:", os.environ.get("VC_APP_VER"))
             is_updating_to_new_truth = 0
             # FIXME if data is none, we'll get stuck after this
     else:
@@ -493,7 +494,6 @@ def check_version():
             return
 
         print("trace check_version")
-        print("current APP_VER:", os.environ.get("VC_APP_VER"))
         if data:
             data.vc_this = 1
 
@@ -501,7 +501,7 @@ def check_version():
         # usually updates happen on the hour so this keeps our
         # schedule on the hour too
         t = time()
-        last_version_check = t - (t % 3600) - 60
+        last_version_check = t - (t % 3600) - 180
         apiclient.versioncheck(check_version_api_recv)
 
 is_updating_to_new_truth = 0
