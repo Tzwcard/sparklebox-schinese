@@ -193,11 +193,13 @@ class DataCache(object):
         return self.events(TODAY())
 
     def load_names(self):
+        translated = load_keyed_db_file(private_data_path("translated.csv"))
         overrides = load_keyed_db_file(private_data_path("overrides.csv"))
         names = load_keyed_db_file(transient_data_path("names.csv"))
 
         if not names:
             # then we can't get a schema
+            names.update(translated)
             names.update(overrides)
             return names
 
@@ -216,6 +218,16 @@ class DataCache(object):
             d.update(overrides[key]._asdict())
             names[key] = schema(**d)
 
+        #untidy.
+        for key in translated:
+            intermediate = names.get(key)
+            if intermediate is None:
+                continue
+
+            d = intermediate._asdict()
+            d.update(translated[key]._asdict())
+            names[key] = schema(**d)
+            
         return names
 
     def prime_caches(self):
@@ -288,6 +300,7 @@ class DataCache(object):
             kana_spaced=lambda obj:  self.names.get(obj.chara_id).kana_spaced,
             conventional=lambda obj: self.names.get(obj.chara_id).conventional,
             translated=lambda obj: self.names.get(obj.chara_id).translated,
+            translated_cht=lambda obj: self.names.get(obj.chara_id).translated_cht,
             valist=lambda obj: []):
             self.char_cache[p.chara_id] = p
             self.primed_this["prm_char"] += 1
