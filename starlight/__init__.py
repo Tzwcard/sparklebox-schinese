@@ -231,15 +231,25 @@ class DataCache(object):
             d.update(override_vals)
             names[real_key] = schema(**d)
 
-        #untidy.
+        # copies
         for key in translated:
-            intermediate = names.get(key)
+            if key < 0:
+                # a negative chara id in the override entry means we should match on kanji.
+                real_key = by_kanji.get(translated[key].kanji)
+                intermediate = names.get(real_key)
+            else:
+                real_key = key
+                intermediate = names.get(key)
+
             if intermediate is None:
                 continue
 
             d = intermediate._asdict()
-            d.update(translated[key]._asdict())
-            names[key] = schema(**d)
+            override_vals = translated[key]._asdict()
+            # chara_id may differ if we indexed on kanji, so remove it
+            del override_vals["chara_id"]
+            d.update(override_vals)
+            names[real_key] = schema(**d)
             
         return names
 
