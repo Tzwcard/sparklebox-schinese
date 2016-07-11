@@ -88,9 +88,12 @@ class SuggestNames(HandlerSyncedWithMaster):
     def get(self):
         names = {value.conventional.lower(): [value.kanji, key] for key, value in starlight.data.names.items()}#conventional value.conventional
         names.update({str(key): [value.kanji, key] for key, value in starlight.data.names.items()})#chara_id
-        names.update({str(value.kanji): [value.kanji, key] for key, value in starlight.data.names.items()})#kanji
+        
+        # additional keyword set
         names.update({str(value.kana_spaced): [value.kanji, key] for key, value in starlight.data.names.items()})#kana_spaced
-        names.update({str(value.translated): [value.kanji, key] for key, value in starlight.data.names.items()})#translated
+        names.update({str(value.kanji): [value.kanji, key] for key, value in starlight.data.names.items()})#kanji
+        names.update({str(value.translated): [value.translated + " *" , key] for key, value in starlight.data.names.items()})#translated
+        names.update({str(value.translated_cht): [value.translated_cht + " *", key] for key, value in starlight.data.names.items()})#translated_cht
 		
         self.set_header("Content-Type", "application/json")
         self.set_header("Cache-Control", "no-cache")

@@ -193,9 +193,64 @@ class DataCache(object):
         return self.events(TODAY())
 
     def load_names(self):
+        translated = load_keyed_db_file(private_data_path("translated.csv"))
         overrides = load_keyed_db_file(private_data_path("overrides.csv"))
         names = load_keyed_db_file(transient_data_path("names.csv"))
-        names.update(overrides)
+
+        if not names:
+            # then we can't get a schema
+            names.update(translated)
+            names.update(overrides)
+            return names
+
+        schema = next(iter(names.values())).__class__
+        names_keys = set(schema._fields)
+        overrides_keys = set(schema._fields)
+        if not overrides_keys <= names_keys:
+            raise Exception('names.csv schema error: all of "chara_id","kanji","kanji_spaced","kana_spaced","conventional" must be present in the header')
+
+        # maps kanji -> chara id
+        by_kanji = {v.kanji: k for k, v in names.items()}
+
+        for key in overrides:
+            if key < 0:
+                # a negative chara id in the override entry means we should match on kanji.
+                real_key = by_kanji.get(overrides[key].kanji)
+                intermediate = names.get(real_key)
+            else:
+                real_key = key
+                intermediate = names.get(key)
+
+            if intermediate is None:
+                continue
+
+            d = intermediate._asdict()
+            override_vals = overrides[key]._asdict()
+            # chara_id may differ if we indexed on kanji, so remove it
+            del override_vals["chara_id"]
+            d.update(override_vals)
+            names[real_key] = schema(**d)
+
+        # copies
+        for key in translated:
+            if key < 0:
+                # a negative chara id in the override entry means we should match on kanji.
+                real_key = by_kanji.get(translated[key].kanji)
+                intermediate = names.get(real_key)
+            else:
+                real_key = key
+                intermediate = names.get(key)
+
+            if intermediate is None:
+                continue
+
+            d = intermediate._asdict()
+            override_vals = translated[key]._asdict()
+            # chara_id may differ if we indexed on kanji, so remove it
+            del override_vals["chara_id"]
+            d.update(override_vals)
+            names[real_key] = schema(**d)
+            
         return names
 
     def prime_caches(self):
@@ -264,10 +319,11 @@ class DataCache(object):
         cur = self.hnd.execute(query, idl)
 
         for p in self.prime_from_cursor("chara_data_t", cur,
-            kanji_spaced = lambda obj: self.names.get(obj.chara_id).kanji_spaced,
-            kana_spaced = lambda obj:  self.names.get(obj.chara_id).kana_spaced,
-            conventional =lambda obj: self.names.get(obj.chara_id).conventional,
-            translated =lambda obj: self.names.get(obj.chara_id).translated,
+            kanji_spaced=lambda obj: self.names.get(obj.chara_id).kanji_spaced,
+            kana_spaced=lambda obj:  self.names.get(obj.chara_id).kana_spaced,
+            conventional=lambda obj: self.names.get(obj.chara_id).conventional,
+            translated=lambda obj: self.names.get(obj.chara_id).translated,
+            translated_cht=lambda obj: self.names.get(obj.chara_id).translated_cht,
             valist=lambda obj: []):
             self.char_cache[p.chara_id] = p
             self.primed_this["prm_char"] += 1

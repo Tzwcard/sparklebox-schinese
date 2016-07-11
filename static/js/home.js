@@ -47,17 +47,28 @@ function suggest(that, text) {
     document.getElementById("suggestions").innerHTML = ""
     console.log(found)
 
+    chara_ids = []
+    found_i = []
     for (var i = 0; i < found.length; i++) {
+        var now_id = window.name_completion_list [found [i] [2]] [1]// getting actual chara_id for results
+        var k = chara_ids.indexOf(now_id)
+        if (k == -1) {
+            chara_ids.push(now_id)// existed chara_id would be ignored at the array
+            found_i.push([found[i][0], found[i][1], found[i][2]])// first "found" array of result would be logged
+        }
+    }
+
+    for (var i = 0; i < chara_ids.length; i++) {
         var n = document.createElement("a");
 
         put = "<span class='highlight'>"
-        aname = window.name_completion_list[found[i][2]][0]
-        s1 = aname.slice(0, found[i][1])
-        s2 = aname.slice(found[i][1], found[i][1] + found[i][0])
-        s3 = aname.slice(found[i][1] + found[i][0])
-
+        aname = window.name_completion_list[chara_ids[i]][0]// found[i][2] is replaced with actual ID (chara_ids[i]), but all result would applying "key" keyword appearance
+        s1 = aname.slice(0, found_i[i][1])
+        s2 = aname.slice(found_i[i][1], found_i[i][1] + found_i[i][0])
+        s3 = aname.slice(found_i[i][1] + found_i[i][0])
+        
         n.innerHTML = s1 + put + s2 + "</span>" + s3
-        n.href = "/char/" + window.name_completion_list[found[i][2]][1]
+        n.href = "/char/" + chara_ids[i][0]
         document.getElementById("suggestions").appendChild(n)
     }
 }
