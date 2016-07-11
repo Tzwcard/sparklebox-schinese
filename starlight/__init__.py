@@ -245,10 +245,10 @@ class DataCache(object):
                 continue
 
             d = intermediate._asdict()
-            override_vals = translated[key]._asdict()
+            translated_vals = translated[key]._asdict()
             # chara_id may differ if we indexed on kanji, so remove it
-            del override_vals["chara_id"]
-            d.update(override_vals)
+            del translated_vals["chara_id"]
+            d.update(translated_vals)
             names[real_key] = schema(**d)
             
         return names
