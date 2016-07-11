@@ -68,7 +68,7 @@ function suggest(that, text) {
         s3 = aname.slice(found_i[i][1] + found_i[i][0])
         
         n.innerHTML = s1 + put + s2 + "</span>" + s3
-        n.href = "/char/" + chara_ids[i][0]
+        n.href = "/char/" + chara_ids[i]
         document.getElementById("suggestions").appendChild(n)
     }
 }
