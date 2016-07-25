@@ -135,9 +135,9 @@ class DataCache(object):
 
     def available_cards(self, gachas):
         current = gachas
-        query = "SELECT gacha_id, reward_id FROM gacha_available WHERE gacha_id IN ({0})".format(",".join("?" * len(current)))
+        query = "SELECT gacha_id, reward_id, limited_flag, recommend_order FROM gacha_available WHERE gacha_id IN ({0})".format(",".join("?" * len(current)))
         tmp = defaultdict(lambda: [])
-        [tmp[gid].append(reward) for gid, reward in self.hnd.execute(query, tuple(g.id for g in current))]
+        [tmp[gid].append((rec, reward, lim)) for gid, reward, lim, rec in self.hnd.execute(query, tuple(g.id for g in current))]
 
         self.primed_this["sel_ac"] += 1
         return [tmp[gacha.id] for gacha in current]
@@ -255,6 +255,8 @@ class DataCache(object):
 
     def prime_caches(self):
         self.names = self.load_names()
+        self.kanji_to_name = {v.kanji: v.conventional for v in self.names.values()}
+
         self.ea_overrides = list(load_db_file(private_data_path("event_availability_overrides.csv")))
         self.overridden_events = set(x.event_id for x in self.ea_overrides)
 
@@ -470,6 +472,9 @@ class DataCache(object):
     def svx_data(self, id):
         return self.prime_from_cursor("fp_data_t",
             self.hnd.execute("SELECT pose, position_x, position_y FROM chara_face_position WHERE chara_id = ?", (id,)))
+
+    def translate_name(self, kanji):
+        return self.kanji_to_name.get(kanji, kanji)
 
     def __del__(self):
         self.hnd.close()

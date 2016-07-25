@@ -79,8 +79,15 @@ function pad_digits(number, digits) {
 }
 
 function ec_count(that) {
+    var expired = 0;
     var d = new Date()
     var msLeft = (parseFloat(that.getAttribute("data-count-to")) * 1000) - d.getTime()
+
+    if (msLeft < 0) {
+        expired = 1;
+        msLeft = -msLeft;
+    }
+
     var seconds = msLeft / 1000
     var secondsOnly = seconds % 60
     var minutes = (seconds - secondsOnly) / 60
@@ -91,8 +98,13 @@ function ec_count(that) {
 
     var s = pad_digits(hoursOnly, 2) + ":" + pad_digits(minutesOnly, 2) + ":" + pad_digits(secondsOnly | 0, 2)
     if (days) {
-        s = days + (days == 1? " day, " : " days, ") + s
+        s = days + "天，" + s
     }
+
+    if (expired) {
+        s = "（已于 " + s + " 前结束）";
+    }
+
     that.textContent = s
 }
 

@@ -13,22 +13,7 @@ import itertools
 import enums
 from datetime import datetime, timedelta
 from functools import partial
-
-def tlable_make_assr(text):
-    if not text:
-        return "@!@!"
-    else:
-        salt = os.getenv("TLABLE_SALT").encode("utf8")
-        return base64.b64encode(hashlib.sha256(text.encode("utf8") + salt).digest()).decode("utf8")
-
-def tlable(text, write=1):
-    text = text.replace("\n", " ")
-    if write:
-        return """<span class="tlable" data-summertriangle-assr="{1}">{0}</span>""".format(
-            tornado.escape.xhtml_escape(text), tlable_make_assr(text))
-    else:
-        return """<span class="tlable">{0}</span>""".format(
-            tornado.escape.xhtml_escape(text))
+import webutil
 
 @route("/api/v1/read_tl")
 class TranslateReadAPI(tornado.web.RequestHandler):
@@ -58,7 +43,7 @@ class TranslateReadAPI(tornado.web.RequestHandler):
     def complete(self, ret):
         from_db = {tlo.key: tlo.english for tlo in ret if tlo.english != tlo.key}
         self.set_header("Content-Type", "application/json; charset=utf-8")
-        self.write(json.dumps(from_db))
+        json.dump(from_db, self, ensure_ascii=0)
         self.finish()
 
 
@@ -81,7 +66,7 @@ class TranslateWriteAPI(tornado.web.RequestHandler):
         s = load.get("tled", "").strip()
         assr = load.get("security")
         #print(key, s, assr)
-        if not (key and s and assr) or tlable_make_assr(key) != assr:
+        if not (key and s and assr) or webutil.tlable_make_assr(key) != assr:
             self.set_status(400)
             return
 
@@ -284,7 +269,7 @@ class ObjectAPI(HandlerSyncedWithMaster, APIUtilMixin):
         if self.settings["is_dev"]:
             json.dump({"result": h(ids, cfg)}, self, ensure_ascii=0, sort_keys=1, indent=2)
         else:
-            json.dump({"result": h(ids, cfg)}, self)
+            json.dump({"result": h(ids, cfg)}, self, ensure_ascii=0)
 
 @route(r"/api/v1/list/card_t")
 class CardListAPI(HandlerSyncedWithMaster, APIUtilMixin):
@@ -333,7 +318,7 @@ class CardListAPI(HandlerSyncedWithMaster, APIUtilMixin):
         if self.settings["is_dev"]:
             json.dump({"result": list(roots)}, self, ensure_ascii=0, sort_keys=1, indent=2)
         else:
-            json.dump({"result": list(roots)}, self)
+            json.dump({"result": list(roots)}, self, ensure_ascii=0)
 
 @route(r"/api/v1/list/char_t")
 class CharListAPI(CardListAPI):
@@ -384,7 +369,21 @@ class HappeningAPI(HandlerSyncedWithMaster, APIUtilMixin):
         if self.settings["is_dev"]:
             json.dump(payload, self, ensure_ascii=0, sort_keys=1, indent=2, default=self.fix_datetime)
         else:
-            json.dump(payload, self, default=self.fix_datetime)
+            json.dump(payload, self, ensure_ascii=0, default=self.fix_datetime)
+
+@route(r"/api/v1/info")
+class InformationAPI(HandlerSyncedWithMaster):
+    def get(self):
+        self.set_header("Content-Type", "application/json; charset=utf-8")
+
+        payload = {
+            "truth_version": starlight.data.version
+        }
+
+        if self.settings["is_dev"]:
+            json.dump(payload, self, ensure_ascii=0, sort_keys=1, indent=2)
+        else:
+            json.dump(payload, self, ensure_ascii=0)
 
 @route(r"/api/private/va_table")
 class VATable(HandlerSyncedWithMaster):

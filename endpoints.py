@@ -9,48 +9,10 @@ import time
 import pytz
 import itertools
 import enums
+import table
 from datetime import datetime, timedelta
 
-import api_endpoints
-tlable = api_endpoints.tlable
-
-def icon(css_class):
-    return """<div class="icon icon_{0}"></div>""".format(css_class)
-
-def icon_ex(card_id, is_lowbw=0, collapsible=0):
-    rec = starlight.data.card(card_id)
-    if not rec:
-        btext = "(?) bug:{0}".format(card_id)
-        ish = """<div class="profile">
-            <div class="icon icon_unknown"></div>
-            <div class="profile_text {0}"><b>Mysterious Kashikoi Person</b><br>{btext}</div>
-        </div>""".format("hides_under_mobile" if collapsible else "", btext=btext)
-        return """<a class="noline">{ish}</a>""".format(ish=ish)
-    else:
-        if not is_lowbw:
-            link = "/char/{rec.chara_id}#c_{rec.id}_head".format(rec=rec)
-        else:
-            link = "/card/{rec.id}".format(rec=rec)
-
-        btext = "({0}) {1}".format(enums.rarity(rec.rarity), tlable(rec.title, write=0) if rec.title_flag else "")
-        ish = """<div class="profile">
-            <div class="icon icon_{rec.id} msprites m{1} {2}"></div>
-            <div class="profile_text {3}"><b>{0}</b><br>{btext}</div>
-        </div>""".format(tornado.escape.xhtml_escape(rec.chara.name),#chara.conventional
-            enums.stat_dot(rec.best_stat),
-            "m" + enums.skill_class(rec.skill.skill_type) if rec.skill else "",
-            "hides_under_mobile" if collapsible else "",
-            rec=rec, btext=btext)
-        return """<a href="{link}" class="noline">{ish}</a>""".format(rec=rec, ish=ish, link=link)
-
-def audio(object_id, use, index):
-    a = (object_id << 40) | ((abs(use) & 0xFF) << 24) | ((index & 0xFF) << 16) | 0x11AB
-    # make everything 8 bytes long for reasons
-    a &= 0xFFFFFFFFFFFFFFFF
-    a ^= 0x1042FC1040200700
-    basename = hex(a)[2:]
-
-    return "va2/{0}.mp3".format(basename)
+import webutil
 
 @route(r"/([0-9]+-[0-9]+-[0-9]+)?")
 class Home(HandlerSyncedWithMaster):
@@ -117,31 +79,6 @@ class EventD(HandlerSyncedWithMaster):
             self.write("{0}".format(evedt.strftime("%B %d, %Y %H:%M")))
         else:
             self.write("None")
-
-
-@route(r"/gacha")
-class GachaTable(HandlerSyncedWithMaster):
-    def get(self):
-        self.set_header("Content-Type", "text/plain; charset=utf-8")
-        self.write("Sorry, I'll get around to implementing this soon...")
-
-@route(r"/skill_table")
-class SkillTable(HandlerSyncedWithMaster):
-    def get(self):
-        self.render("skill_table.html",
-                    cards=starlight.data.cards(starlight.data.all_chain_ids()),
-                    **self.settings)
-        self.settings["analytics"].analyze_request(self.request, self.__class__.__name__)
-
-
-@route(r"/lead_skill_table")
-class LeadSkillTable(HandlerSyncedWithMaster):
-    def get(self):
-        self.render("lead_skill_table.html",
-                    cards=starlight.data.cards(starlight.data.all_chain_ids()),
-                    **self.settings)
-        self.settings["analytics"].analyze_request(self.request, self.__class__.__name__)
-
 
 @route(r"/char/([0-9]+)(/table)?")
 class Character(HandlerSyncedWithMaster):
@@ -210,6 +147,134 @@ class Card(HandlerSyncedWithMaster):
         else:
             self.set_status(404)
             self.write("Not found.")
+
+# all the table handlers go here
+
+@route(r"/t/([A-Za-z]+)/([^/]+)")
+class ShortlinkTable(HandlerSyncedWithMaster):
+    def rendertable(self, dataset, cards, allow_shortlink=1, table_name="自定义列表"):
+        filters, categories = table.select_categories(dataset)
+
+        self.render("generictable.html",
+                    filters=filters,
+                    categories=categories,
+                    cards=cards,
+                    original_dataset=dataset,
+                    show_shortlink=allow_shortlink,
+                    table_name=table_name,
+                    **self.settings)
+
+    def get(self, dataset, spec):
+        try:
+            idlist = webutil.decode_cardlist(spec)
+        except ValueError:
+            self.set_status(400)
+            self.write("The card list could not be parsed")
+            return
+
+        self.rendertable(dataset.upper(), starlight.data.cards(idlist))
+        self.settings["analytics"].analyze_request(self.request, self.__class__.__name__)
+
+@route(r"/skill_table")
+class SkillTable(ShortlinkTable):
+    def get(self):
+        self.rendertable("CASDE", starlight.data.cards(starlight.data.all_chain_ids()), allow_shortlink=0, table_name="Cards by skill")
+        self.settings["analytics"].analyze_request(self.request, self.__class__.__name__)
+
+@route(r"/lead_skill_table")
+class LeadSkillTable(ShortlinkTable):
+    def get(self):
+        self.rendertable("CAKL", starlight.data.cards(starlight.data.all_chain_ids()), allow_shortlink=0, table_name="Cards by lead skill")
+        self.settings["analytics"].analyze_request(self.request, self.__class__.__name__)
+
+@route(r"/table/([A-Za-z]+)/([0-9\,]+)")
+class CompareCard(HandlerSyncedWithMaster):
+    def get(self, dataset, card_idlist):
+        plus = bool(self.get_argument("plus", 0))
+
+        card_ids = [int(x) for x in card_idlist.strip(",").split(",")]
+
+        chains = [starlight.data.chain(id) for id in card_ids]
+        unique = []
+        for c in chains:
+            if c not in unique:
+                unique.append(c)
+
+        acard = []
+        for chain in unique:
+            acard.append(starlight.data.card(chain[-1 if plus else 0]))
+
+        filters, categories = table.select_categories(dataset.upper())
+
+        if acard:
+            self.set_header("Content-Type", "text/html")
+            self.render("generictable.html",
+                filters=filters,
+                categories=categories,
+                cards=acard,
+                original_dataset=dataset,
+                table_name="自定义列表",
+                show_shortlink=1,
+                **self.settings)
+            self.settings["analytics"].analyze_request(
+                self.request, self.__class__.__name__, {"card_id": card_idlist})
+        else:
+            self.set_status(404)
+            self.write("Not found.")
+
+@route(r"/gacha(?:/([0-9]+))?")
+class GachaTable(HandlerSyncedWithMaster):
+    def get(self, maybe_gachaid):
+        if maybe_gachaid:
+            maybe_gachaid = int(maybe_gachaid)
+            gachas = starlight.data.gacha_ids()
+
+            for gcid in gachas:
+                if gcid.id == maybe_gachaid:
+                    selected_gacha = gcid
+                    break
+            else:
+                selected_gacha = None
+        else:
+            now = pytz.utc.localize(datetime.utcnow())
+            gachas = starlight.data.gachas(now)
+
+            if gachas:
+                selected_gacha = gachas[0]
+            else:
+                selected_gacha = None
+
+        if selected_gacha is None:
+            self.set_status(404)
+            self.write("Not found. If there's no gacha happening right now, you'll have to specify an ID.")
+            return
+
+        availability_list = starlight.data.available_cards([selected_gacha])[0]
+        availability_list.sort(key=lambda x: x[0] or 9001)
+
+        card_list = starlight.data.cards(av[1] for av in availability_list)
+        limited_flags = {av[1]: av[2] for av in availability_list}
+
+        filters, categories = table.select_categories("CASDE")
+
+        lim_cat = table.CustomBool()
+        lim_cat.header_text = "限？"
+        lim_cat.values = limited_flags
+        lim_cat.yes_text = "○"
+        lim_cat.no_text = "－"
+
+        categories.insert(0, lim_cat)
+
+        self.render("ext_gacha_table.html",
+            filters=filters,
+            categories=categories,
+            cards=card_list,
+            table_name="自定义列表",
+            show_shortlink=0,
+            gacha=selected_gacha,
+            **self.settings)
+        self.settings["analytics"].analyze_request(self.request, self.__class__.__name__,
+            {"gid": maybe_gachaid})
 
 
 @route(r"/sprite_go/([0-9]+).png")
