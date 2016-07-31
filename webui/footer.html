@@ -1,6 +1,6 @@
 <footer>
     <small>truth version {{ starlight.data.version }} opened at {{ starlight.data.load_date_jst }}<br>
-           did this page trigger a versioncheck? {{ starlight.data.vc_this }}<br>
+           did this page trigger a versioncheck? {{ "yes" if starlight.data.vc_this else "no" }}<br>
            did this page generate primes? {{ starlight.data.primed_this }}<br>
            render time (so far): {{ request.request_time() * 1000 }} (ms)
            {% if starlight.is_updating_to_new_truth %}
@@ -8,4 +8,5 @@
            {% end %}
     </small><br>
     <small>Report bugs/suggest features on <a href="https://github.com/summertriangle-dev/sparklebox">GitHub</a>  中文翻译分支版本：<a href="https://github.com/CaiMiao/sparklebox-schinese">GitHub</a></small>
+    <small>该站的所有者并未申请该页面下任何内容的所有权。</small>
 </footer>
