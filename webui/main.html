@@ -48,7 +48,8 @@
     <div class="birthday_banner r_{{ enums.attribute(char.type) }}" style="display:none" data-birthday="{{ char.birth_month }}/{{ char.birth_day }}">
       <div class="ribbon r_{{ enums.attribute(char.type) }}"></div>
       <div class="icon icon_{{ starlight.data.cards_belonging_to_char(char.chara_id)[-1] }}" style="position:absolute;top:5px;left:5px;"></div>
-      今天是 <a href="/char/{{ char.chara_id }}">{{ char.kanji_spaced }}</a> 的生日。生日快乐！ ({{ char.birth_month }}/{{ char.birth_day }})
+      今天是 <a href="/char/{{ char.chara_id }}">{{ starlight.en.westernized_name(char).split()[0] }}</a> 的生日（<span class="where_the_birthday_is"><!-- strings in home.js  --></span>）。
+      生日快乐！({{ char.birth_month }}/{{ char.birth_day }})
     </div>
     {% end %}
     <script> birthday_hider_init(); </script>
@@ -92,9 +93,12 @@
       </div>
       {% if available %}
       <div class="content" style="background:#333;text-align:left;">
-        {% for ent in available %}
-        {% raw icon_ex(ent, request.is_low_bandwidth) %}
-        {% end %}
+        <div class="iconex_row">
+          {% for ent in available %}
+          {% raw icon_ex(ent, request.is_low_bandwidth) %}
+          {% end %}
+        </div>
+        <a href="/gacha/{{ gacha.id }}">(full availability list)</a>
       </div>
       {% else %}
       <div class="content" style="background:#333;text-align:left;">
@@ -108,14 +112,14 @@
 
   <div class="container">
     <!-- custom homepage text starts here. -->
-    {% include "frontpage_text.html" %}
+    {% include "partials/frontpage_text.html" %}
     <!-- custom homepage text ends here. -->
   </div>
 
   <div class="container">
     <div class="box black">
     {% for new_list in history %}
-    {% include new_list_partial.html %}
+    {% include partials/new_list_partial.html %}
     {% end %}
     </div>
   </div>
@@ -124,7 +128,7 @@
     <p><a href="/history">&gt; 往期加入卡牌</a></p>
   </div>
 
-  {% include footer.html %}
+  {% include partials/footer.html %}
   <script> tlinject_activate(); </script>
   <script> event_counter_init(); </script>
 </body>
