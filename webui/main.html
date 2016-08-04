@@ -32,7 +32,7 @@
     <div class="birthday_banner r_{{ enums.attribute(char.type) }}" style="display:none" data-birthday="{{ char.birth_month }}/{{ char.birth_day }}">
       <div class="ribbon r_{{ enums.attribute(char.type) }}"></div>
       <div class="icon icon_{{ starlight.data.cards_belonging_to_char(char.chara_id)[-1] }}" style="position:absolute;top:5px;left:5px;"></div>
-      今天是 <a href="/char/{{ char.chara_id }}">{{ starlight.en.westernized_name(char).split()[0] }}</a> 的生日（<span class="where_the_birthday_is"><!-- strings in home.js  --></span>）。
+      今天是 <a href="/char/{{ char.chara_id }}">{{ char.name }}</a> 的生日<small>（<span class="where_the_birthday_is"><!-- strings in home.js  --></span>）</small>。<!-- starlight.en.westernized_name(char).split()[0] --><br>
       生日快乐！({{ char.birth_month }}/{{ char.birth_day }})
     </div>
     {% end %}
@@ -82,7 +82,7 @@
           {% raw icon_ex(ent, request.is_low_bandwidth) %}
           {% end %}
         </div>
-        <a href="/gacha/{{ gacha.id }}">(full availability list)</a>
+        <a href="/gacha/{{ gacha.id }}">（完整可抽列表）</a>
       </div>
       {% else %}
       <div class="content" style="background:#333;text-align:left;">

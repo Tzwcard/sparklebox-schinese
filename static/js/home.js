@@ -160,7 +160,7 @@ function birthday_hider_init() {
 
         if (parseInt(date[0]) == jsttoday.getMonth() + 1 && parseInt(date[1]) == jsttoday.getDate()) {
             el.style.display = "block";
-            el.querySelector(".where_the_birthday_is").textContent = "在日本";
+            el.querySelector(".where_the_birthday_is").textContent = "日本时间";
         } else if (parseInt(date[0]) == today.getMonth() + 1 && parseInt(date[1]) == today.getDate()) {
             el.style.display = "block";
             el.querySelector(".where_the_birthday_is").textContent = "在你的时区";
