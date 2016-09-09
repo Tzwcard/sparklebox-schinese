@@ -5,13 +5,14 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <link rel="stylesheet" type="text/css" href="css/main.css" />
-    <title>デレステ　ゲーム内お知らせ</title>
+    <title>デレステ ゲーム内お知らせ</title>
     <style>
       pre, code { font-family:monospace; font-size:16px; }
       pre { background-color:#444; padding:8px 5px; }
       * { font-family: Helvetica, Arial, 'ヒラギノ角ゴ ProN W3', 'モリサワ 新ゴ R', 'Droid Sans', メイリオ, sans-serif; }
       .global_header{ position:fixed; top:0; width:99%; max-width: none; z-index:99; }
       iframe{ width:99%; height: 90%; position:absolute; top:50px; bottom:0;}
+      .global_header #back::after { content: ""; }
       @media screen and (max-width: 500px) {
       iframe{ top:100px; }
       }
@@ -19,6 +20,7 @@
 </head>
 <body>
   <div class="container global_header">
+    <a href="/" id="back">← Back</a>
     <span>お知らせ</span>:</span>
     <a href="http://game.starlight-stage.jp/information/index/0/1/" target="noticefr">更新情報</a>
     <a href="http://game.starlight-stage.jp/information/index/0/2/" target="noticefr">開催情報</a>
