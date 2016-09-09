@@ -9,6 +9,9 @@
     <style>
       pre, code { font-family:monospace; font-size:16px; }
       pre { background-color:#444; padding:8px 5px; }
+      * { font-family: Helvetica, Arial, 'ヒラギノ角ゴ ProN W3', 'モリサワ 新ゴ R', 'Droid Sans', メイリオ, sans-serif; }
+      .global_header{ position:fixed; top:0; width:99%; max-width: none; z-index:99;}
+      iframe{ width:99%; height: 90%; position:fixed; top:50px; bottom:0;}
     </style>
 </head>
 <body>
@@ -19,9 +22,11 @@
     <a href="http://game.starlight-stage.jp/information/index/0/3/" target="noticefr">不具合情報</a>
   </div>
 
-  <div class="container">
-    <iframe id="noticefr" name="noticefr" src="http://game.starlight-stage.jp/information/index/0/1/" frameborder="1" onload ="javascript:getWidth()"
-    height="1000%" width="100%" scrolling="yes"></iframe>
+  <div class="framebox">
+    <iframe id="noticefr" name="noticefr" src="http://game.starlight-stage.jp/information/index/0/1/"
+    frameborder="0" scrolling="yes">
+        <p>Your browser does not support iframes.</p>
+    </iframe>
   </div>
 <body>
 </html>
