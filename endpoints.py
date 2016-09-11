@@ -151,19 +151,40 @@ class Card(HandlerSyncedWithMaster):
 
 # all the table handlers go here
 
+# Try to use ShortlinkTable.rendertable instead of directly rendering
+# a table template whenever possible, so we can make enhancements to
+# it apply globally to all tables.
+
 @route(r"/t/([A-Za-z]+)/([^/]+)")
 class ShortlinkTable(HandlerSyncedWithMaster):
-    def rendertable(self, dataset, cards, allow_shortlink=1, table_name="自定义列表"):
-        filters, categories = table.select_categories(dataset)
+    # This shouldn't take too long.
+    # The full chain is pre-emptively loaded when any member is requested
+    def flip_chain(self, card):
+        return starlight.data.card(starlight.data.chain(card.series_id)[-1])
 
-        self.render("generictable.html",
+    def rendertable(self, dataset, cards,
+                    allow_shortlink=1, table_name="自定义列表",
+                    template="generictable.html", **extra):
+        if isinstance(dataset, str):
+            filters, categories = table.select_categories(dataset)
+        else:
+            filters, categories = dataset
+
+        should_switch_chain_head = self.get_argument("plus", "NO") == "YES"
+        if should_switch_chain_head:
+            cards = list(map(self.flip_chain, cards))
+
+        extra.update(self.settings)
+
+        self.render(template,
                     filters=filters,
                     categories=categories,
                     cards=cards,
                     original_dataset=dataset,
                     show_shortlink=allow_shortlink,
                     table_name=table_name,
-                    **self.settings)
+                    is_displaying_awake_forms=should_switch_chain_head,
+                    **extra)
 
     def get(self, dataset, spec):
         try:
@@ -179,44 +200,34 @@ class ShortlinkTable(HandlerSyncedWithMaster):
 @route(r"/skill_table")
 class SkillTable(ShortlinkTable):
     def get(self):
-        self.rendertable("CASDE", starlight.data.cards(starlight.data.all_chain_ids()), allow_shortlink=0, table_name="Cards by skill")
+        self.rendertable("CASDE", starlight.data.cards(starlight.data.all_chain_ids()),
+            allow_shortlink=0,
+            table_name="Cards by skill")
         self.settings["analytics"].analyze_request(self.request, self.__class__.__name__)
 
 @route(r"/lead_skill_table")
 class LeadSkillTable(ShortlinkTable):
     def get(self):
-        self.rendertable("CAKL", starlight.data.cards(starlight.data.all_chain_ids()), allow_shortlink=0, table_name="Cards by lead skill")
+        self.rendertable("CAKL", starlight.data.cards(starlight.data.all_chain_ids()),
+            allow_shortlink=0,
+            table_name="Cards by lead skill")
         self.settings["analytics"].analyze_request(self.request, self.__class__.__name__)
 
 @route(r"/table/([A-Za-z]+)/([0-9\,]+)")
-class CompareCard(HandlerSyncedWithMaster):
+class CompareCard(ShortlinkTable):
     def get(self, dataset, card_idlist):
-        plus = bool(self.get_argument("plus", 0))
-
         card_ids = [int(x) for x in card_idlist.strip(",").split(",")]
 
         chains = [starlight.data.chain(id) for id in card_ids]
         unique = []
         for c in chains:
-            if c not in unique:
-                unique.append(c)
+            if c[0] not in unique:
+                unique.append(c[0])
 
-        acard = []
-        for chain in unique:
-            acard.append(starlight.data.card(chain[-1 if plus else 0]))
-
-        filters, categories = table.select_categories(dataset.upper())
+        acard = starlight.data.cards(unique)
 
         if acard:
-            self.set_header("Content-Type", "text/html")
-            self.render("generictable.html",
-                filters=filters,
-                categories=categories,
-                cards=acard,
-                original_dataset=dataset,
-                table_name="自定义列表",
-                show_shortlink=1,
-                **self.settings)
+            self.rendertable(dataset.upper(), acard, table_name="自定义列表")
             self.settings["analytics"].analyze_request(
                 self.request, self.__class__.__name__, {"card_id": card_idlist})
         else:
@@ -224,7 +235,7 @@ class CompareCard(HandlerSyncedWithMaster):
             self.write("Not found.")
 
 @route(r"/gacha(?:/([0-9]+))?")
-class GachaTable(HandlerSyncedWithMaster):
+class GachaTable(ShortlinkTable):
     def get(self, maybe_gachaid):
         if maybe_gachaid:
             maybe_gachaid = int(maybe_gachaid)
@@ -266,14 +277,12 @@ class GachaTable(HandlerSyncedWithMaster):
 
         categories.insert(0, lim_cat)
 
-        self.render("ext_gacha_table.html",
-            filters=filters,
-            categories=categories,
+        self.rendertable( (filters, categories),
             cards=card_list,
-            table_name="自定义列表",
-            show_shortlink=0,
-            gacha=selected_gacha,
-            **self.settings)
+            allow_shortlink=0,
+            table_name="扭蛋：{0}".format(selected_gacha.name),
+            template="ext_gacha_table.html",
+            gacha=selected_gacha)
         self.settings["analytics"].analyze_request(self.request, self.__class__.__name__,
             {"gid": maybe_gachaid})
 

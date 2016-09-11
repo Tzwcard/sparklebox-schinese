@@ -19,11 +19,11 @@ card_attribute = filter_t("偶像属性", (
 lambda card: enums.attribute(card.attribute) + "_kc")
 
 rarity = filter_t("卡牌稀有度", (
-    option_t("SSR", "SSR_kc"),
-    option_t("SR",  "SR_kc"),
-    option_t("R",   "Rare_kc"),
-    option_t("N",   "Normal_kc")),
-lambda card: enums.rarity(card.rarity) + "_kc")
+    option_t("SSR", "ssr_kc"),
+    option_t("SR",  "sr_kc"),
+    option_t("R",   "r_kc"),
+    option_t("N",   "n_kc")),
+lambda card: enums.floor_rarity(card.rarity) + "_kc")
 
 skill_type = filter_t("特技类型", (
     option_t("强判", "s_pl"),
@@ -129,7 +129,7 @@ class SkillEffect(Datum):
 
     def make_headers(self):
         return (
-            """<th>效果 (排序: """
+            """<th>效果 (排序："""
             """<span class="sort_key" data-sort-key="STSkillTimeDatum">时间间隔</span>, """
             """<span class="sort_key" data-sort-key="STSkillProcChanceDatum">% 几率</span>, """
             """<span class="sort_key" data-sort-key="STSkillDurationDatum">持续时间</span>, """
@@ -173,7 +173,7 @@ class LSkillEffect(Datum):
 
     def make_headers(self):
         return (
-            """<th>效果 (sort: <span class="sort_key" data-sort-key="STLeadSkillUpDatum">% up</span>)</th>"""
+            """<th>效果 (排序：<span class="sort_key" data-sort-key="STLeadSkillUpDatum">% up</span>)</th>"""
         )
 
     def make_values(self, a_card):

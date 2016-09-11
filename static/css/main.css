@@ -962,13 +962,15 @@ strong.ga_available {
   content: "»";
   padding-left: 8px;
 }
-.contains_large_table {
-  overflow-x: scroll;
-  -webkit-overflow-scrolling: touch;
-  overflow-scrolling: touch;
-}
 .contains_large_table .table {
   min-width: 768px;
+}
+@media screen and (max-width: 768px) {
+  .contains_large_table {
+    overflow-x: scroll;
+    -webkit-overflow-scrolling: touch;
+    overflow-scrolling: touch;
+  }
 }
 .birthday_banner {
   position: relative;
@@ -1037,4 +1039,16 @@ strong.ga_available {
 }
 .sort_key[data-sort-reverse="no"]::before {
   content: "▴ ";
+}
+td.filter_switch {
+  background-color: #777777;
+}
+td.filter_switch.enabled {
+  background-color: #44aa55;
+}
+a.fill_cell {
+  display: block;
+  width: 100%;
+  color: white;
+  text-decoration: none;
 }

@@ -167,6 +167,17 @@ stat_en = enum([
     7, "这张卡数值较为均衡（Vocal较高）"
 ])
 
+floor_rarity = enum([
+    1, "n",
+    2, "n",
+    3, "r",
+    4, "r",
+    5, "sr",
+    6, "sr",
+    7, "ssr",
+    8, "ssr",
+])
+
 # TODO need enum defs for
 # constellation
 # blood_type

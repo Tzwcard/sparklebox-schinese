@@ -34,7 +34,7 @@
           {% for fopt in filter_.options %}
 
           {% if fopt.kill_class %}
-          <td onclick="toggle_kill_css(this)" data-kill-class="{{ fopt.kill_class }}" class="vocal">○</td>
+          <td onclick="toggle_kill_css(this)" data-kill-class="{{ fopt.kill_class }}" class="filter_switch enabled">○</td>
           {% else %}
           <td></td>
           {% end %}
@@ -57,19 +57,47 @@
       </table>
       {% end %}
 
+      <table class="stats_table control_table">
+        <tr class="toggles_row">
+          <th>切换至特训后？</th>
+
+          {# yes_symbol and no_symbol are raw html. beware of accidental injections. #}
+          {% if is_displaying_awake_forms %}
+            {% set yes_symbol = "○"      %}
+            {% set no_symbol  = "&nbsp;" %}
+          {% else %}
+            {% set yes_symbol = "&nbsp;" %}
+            {% set no_symbol  = "○"      %}
+          {% end %}
+
+          <td class="filter_switch {% if is_displaying_awake_forms %} enabled {% end %}">
+            <a class="fill_cell" href="?plus=YES">{% raw yes_symbol %}</a>
+          </td>
+          <td class="filter_switch {% if not is_displaying_awake_forms %} enabled {% end %}">
+            <a class="fill_cell" href="?plus=NO">{% raw no_symbol %}</a>
+          </td>
+        </tr>
+        <tr>
+          <th>&nbsp;</th>
+          <th>是</th>
+          <th>否</th>
+        </tr>
+      </table>
+
       {% if show_shortlink %}
       <p>
-        <a href="/t/{{ original_dataset }}/{{ webutil.encode_card_structs(cards) }}">(Short link)</a>
+        <a href="/t/{{ original_dataset }}/{{ webutil.encode_card_structs(cards) }}">（短网址）</a>
       </p>
       {% end %}
 
-      <p>
-        点击带下划线的表头即可以该数值对表格排序。
-        特别注意你应在使用技能的排序前先应用过滤条件，因为你实际上并不能对比技能的效果。
-      </p>
 
       {% block extra_info %}
       {% end %}
+
+      <small>
+        点击带下划线的表头即可以该数值对表格排序。
+        特别注意你应在使用技能的排序前先应用过滤条件，因为你实际上并不能对比技能的效果。
+      </small>
     </div>
 
     <div class="contains_large_table">

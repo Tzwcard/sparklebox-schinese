@@ -87,6 +87,7 @@ potential_birthday_t = namedtuple("potential_birthday_t", ("month", "day", "char
 
 TITLE_ONLY_REGEX = r"^［(.+)］"
 NAME_ONLY_REGEX = r"^(?:［.+］)?(.+)$"
+AWAKENED_SYMBOL = "＋"
 
 class DataCache(object):
     def __init__(self, version):
@@ -341,11 +342,13 @@ class DataCache(object):
         self.primed_this["prm_char_calls"] += 1
 
     def cache_cards(self, idl):
-        normalized_idl = []
+        normalized_idl = set()
         for id in idl:
             a = self.chain_id.get(id)
             if a:
-                normalized_idl.append(a)
+                normalized_idl.add(a)
+
+        idl = list(normalized_idl)
 
         query_preload_chars = "SELECT DISTINCT chara_id FROM card_data WHERE id IN ({0})".format(",".join("?" * len(idl)))
         self.cache_chars(list(map(lambda x: x[0], self.hnd.execute(query_preload_chars, idl))))
@@ -487,7 +490,10 @@ class DataCache(object):
             self.hnd.execute("SELECT pose, position_x, position_y FROM chara_face_position WHERE chara_id = ?", (id,)))
 
     def translate_name(self, kanji):
-        return self.kanji_to_name.get(kanji, kanji)
+        if kanji[-1] == AWAKENED_SYMBOL:
+            return self.kanji_to_name.get(kanji[:-1], kanji[:-1]) + "+"
+        else:
+            return self.kanji_to_name.get(kanji, kanji)
 
     @lru_cache(1)
     def birthdays(self):
