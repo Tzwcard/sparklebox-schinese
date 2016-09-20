@@ -1,0 +1,17 @@
+<tr>
+  <th class="hides_under_mobile">{{ _("用途") }}</th>
+  <th colspan="2">{{ _("文本") }}</th>
+</tr>
+{% for current_va_id in va_id %}
+  {% for id, usage, index, voice, text, override_utype in starlight.data.va_data(current_va_id) %}
+  <tr>
+    <td class="hides_under_mobile">{% raw tlable("USE_TYPE__T_{0}".format(override_utype or usage)) %}</td>
+    <td>{% raw tlable(text.format("[Producer]")) %}</td>
+    {% if voice %}
+    <td><a style="color:black" class="soundinliner-apply" href="{{ image_host }}/{{ webutil.audio(id, usage, index) }}">(listen)</a></td>
+    {% else %}
+    <td>🙁</td>
+    {% end %}
+  </tr>
+  {% end %}
+{% end %}

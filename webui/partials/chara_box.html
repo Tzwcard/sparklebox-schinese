@@ -15,6 +15,7 @@
     <div class="table_stub" style="padding-top:10px">
       <a class="image_switch" href="http://cgdex.project-imas.com/?v=idols&o=Name%20LIKE%20%22{{ chara.conventional }}%22">CGdex</a>
       <a class="image_switch" href="http://www.project-imas.com/wiki/{{ starlight.en.westernized_name(chara).replace(" ", "_") }}">Project iM@S Wiki</a>
+      <a class="image_switch" href="https://zh.moegirl.org/index.php?search={{ chara.name }}" title="暂用搜索方式">萌娘百科</a>
       <a class="image_switch" href="/sprite_go_ex/{{ chara.chara_id }}">表情贴图</a>
       {% if not request.is_low_bandwidth %}
       <a class="image_switch" onclick="table('va_chara_{{ chara.chara_id }}', this)">显示角色相关文本</a>
@@ -38,6 +39,9 @@
 {% else %}
 <div id="raw_chara_{{ chara_id }}" class="stdcon table">
     <table class="table">
+        <tr><td colspan="2"><b>This table is for usage by humans.
+            If you want to access this information programmatically, consider using the <a href="/static/api.html">API</a> instead.
+            It will save you the trouble of parsing this table.</b></td></tr>
         {% for key, value in chara.__dict__.items() %}
         <tr><td>{{ key }}</td><td>{{ value }}</td></tr>
         {% end %}

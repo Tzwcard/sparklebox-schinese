@@ -6,14 +6,15 @@ from time import time as _time
 from sqlalchemy.exc import OperationalError
 from sqlalchemy.orm.exc import NoResultFound
 from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy import Column, Integer, String, UnicodeText, LargeBinary
+from sqlalchemy import Column, Integer, String, UnicodeText, LargeBinary, SmallInteger
 from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker, aliased
+from sqlalchemy.orm import sessionmaker, aliased, load_only
 from sqlalchemy import func
 import multiprocessing
 from tornado.ioloop import IOLoop
 from functools import partial
 from collections import defaultdict, namedtuple
+import starlight
 
 unknown_gacha_t = namedtuple("unknown_gacha_t", ("name"))
 
@@ -22,12 +23,13 @@ class Availability(object):
     """mutable class so we can meld stuff"""
     _TYPE_GACHA = 1
     _TYPE_EVENT = 2
-    def __init__(self, type, name, start, end, gaps):
+    def __init__(self, type, name, start, end, gaps, limited):
         self.type = type
         self.name = name
         self.start = start
         self.end = end
         self.gaps = gaps
+        self.limited = limited
 
     def __repr__(self):
         return "models.Availability({0})".format(
@@ -45,7 +47,8 @@ def combine_availability(l):
     prev = l[0]
     for availability in l[1:]:
         bet = availability.start - prev.end
-        if bet.seconds > 0 and bet.days <= 3:
+        # max 3 day gap, and both descriptions must be limited/non-limited
+        if bet.seconds > 0 and bet.days <= 3 and prev.limited == availability.limited:
             prev.gaps.append(Gap(prev.end, availability.start))
             prev.end = availability.end
         else:
@@ -75,8 +78,14 @@ def utext():
     else:
         return UnicodeText(collation="utf8_bin")
 
+TABLE_PREFIX = os.getenv("TLE_TABLE_PREFIX", None)
+if TABLE_PREFIX is None:
+    print("Warning: env variable TLE_TABLE_PREFIX unset. Defaulting to 'ss'. "
+        "(Set TLE_TABLE_PREFIX to silence this warning.)")
+    TABLE_PREFIX = "ss"
+
 class TranslationEntry(Base):
-    __tablename__ = "ss_translation"
+    __tablename__ = TABLE_PREFIX + "_translation"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
     key = Column(utext())
@@ -88,7 +97,7 @@ class TranslationEntry(Base):
         return "<TL entry {x.id} '{x.english}' by {x.submitter} @{x.submit_utc}>".format(x=self)
 
 class TranslationCache(Base):
-    __tablename__ = "ss_translation_cache"
+    __tablename__ = TABLE_PREFIX + "_translation_cache"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
     key = Column(utext())
@@ -97,24 +106,8 @@ class TranslationCache(Base):
     def __repr__(self):
         return "<TL entry {x.id} '{x.english}'>".format(x=self)
 
-class HistoryEntry(Base):
-    __tablename__ = "ss_history"
-
-    id = Column(Integer, primary_key=True, autoincrement=True)
-    time = Column(Integer)
-    payload = Column(LargeBinary)
-
-    def dt_string(self):
-        return self.datetime().strftime("%Y-%m-%d")
-
-    def datetime(self):
-        return datetime.fromtimestamp(self.time)
-
-    def asdict(self):
-        return json.loads(self.payload.decode("ascii"))
-
 class GachaRewardEntry(Base):
-    __tablename__ = "ss_gacha_available_ex"
+    __tablename__ = TABLE_PREFIX + "_gacha_available_ex"
 
     gacha_id = Column(Integer, primary_key=True, nullable=False, autoincrement=False)
     step_num = Column(Integer)
@@ -123,7 +116,7 @@ class GachaRewardEntry(Base):
     limited_flag = Column(Integer, primary_key=True, autoincrement=False)
 
 class GachaPresenceEntry(Base):
-    __tablename__ = "ss_gacha_contiguous_presence"
+    __tablename__ = TABLE_PREFIX + "_gacha_contiguous_presence"
 
     rowid = Column(Integer, primary_key=True)
     card_id = Column(Integer, nullable=False)
@@ -132,8 +125,121 @@ class GachaPresenceEntry(Base):
     avail_start = Column(Integer, nullable=False)
     avail_end = Column(Integer, nullable=False)
 
+HISTORY_TYPE_EVENT = 2
+HISTORY_TYPE_GACHA = 3
+HISTORY_TYPE_ADD_N = 4
+HISTORY_TYPE_EVENT_END = 5
+HISTORY_TYPE_GACHA_END = 6
+
+EVENT_TYPE_TOKEN = 0
+EVENT_TYPE_CARAVAN = 1
+EVENT_TYPE_GROOVE = 2
+EVENT_TYPE_PARTY = 3
+
+EVENT_ATTR_NONE = 0
+EVENT_ATTR_CU = 1
+EVENT_ATTR_CO = 2
+EVENT_ATTR_PA = 3
+
+EVENT_STAT_NONE = 0
+EVENT_STAT_VO = 1
+EVENT_STAT_VI = 2
+EVENT_STAT_DA = 3
+
+class HistoryEventEntry(Base):
+    __tablename__ = TABLE_PREFIX + "_history_ex"
+
+    # event type/id
+    descriptor = Column(Integer, primary_key=True)
+    extra_type_info = Column(SmallInteger)
+    # card ids added, as a comma separated list
+    added_cards = Column(utext())
+    event_name = Column(utext())
+
+    start_time = Column(Integer)
+    end_time = Column(Integer)
+
+    # the top 4 bits of .descriptor denote the type of history
+    # event, the others are for the underlying event id, gacha id,
+    # etc.
+
+    def type(self):
+        return (self.descriptor & 0xF0000000) >> 28
+
+    # gacha id, event id, etc
+    def referred_id(self):
+        return self.descriptor & 0x0FFFFFFF
+
+    def ensure_parsed_changelist(self):
+        if not hasattr(self, "parsed_changelist"):
+            if self.added_cards:
+                self.parsed_changelist = json.loads(self.added_cards)
+            else:
+                self.parsed_changelist = {}
+
+        return self.parsed_changelist
+
+    def category_card_list(self, cat):
+        return self.ensure_parsed_changelist().get(cat, [])
+
+    def card_list(self):
+        cl = self.ensure_parsed_changelist()
+
+        ret = []
+        for k in sorted(cl.keys()):
+            ret.extend(cl[k])
+
+        return ret
+
+    def card_list_has_more_than_one_category(self):
+        return len(self.ensure_parsed_changelist()) > 1
+
+    def card_urlspec(self):
+        return ",".join( map(str, self.card_list()) )
+
+    def start_dt_string(self):
+        return self.start_datetime().strftime("%Y-%m-%d")
+
+    def end_dt_string(self):
+        return self.end_datetime().strftime("%Y-%m-%d")
+
+    def start_datetime(self):
+        return datetime.fromtimestamp(self.start_time)
+
+    def end_datetime(self):
+        return datetime.fromtimestamp(self.end_time)
+
+    def length_in_days(self):
+        secs = (self.end_time - self.start_time)
+        return secs / (60 * 60 * 24)
+
+    # -- extra_type_info bitfields for events:
+    # (these are binary digits, not hex)
+    #      00000000 0SSAATTT
+    # SS: Focus stat (for grooves), 0-4
+    # AA: Attribute (for tokens), 0-4
+    # TTT: Event type, 0-7
+
+    def event_type(self):
+        return self.extra_type_info & 0x7
+
+    # don't use these for now
+    # def event_attribute(self):
+    #     return (self.extra_type_info & 0x18) >> 3
+    #
+    # def groove_stat(self):
+    #     return (self.extra_type_info & 0x60) >> 5
+
+    # -- extra_type_info bitfields for gachas:
+    # (these are binary digits, not hex)
+    #      00000000 0000000L
+    # L: limited?, 0-1
+
+    def gacha_is_limited(self):
+        return self.extra_type_info & 0x1
+
 class TranslationSQL(object):
-    def __init__(self, use_satellite, override_url=None):
+    def __init__(self, override_url=None):
         self.really_connected = 0
         self.session_nest = []
         self.connect_url = override_url
@@ -149,7 +255,8 @@ class TranslationSQL(object):
         if not self.really_connected:
             conn_s = self.connect_url or os.getenv("DATABASE_CONNECT")
             self.engine = create_engine(conn_s, echo=False,
-                connect_args={"ssl": {"dummy": "yes"}})
+                #connect_args={"ssl": {"dummy": "yes"}})
+		connect_args={'sslmode':'require'})
 
             try:
                 Base.metadata.create_all(self.engine)
@@ -347,6 +454,10 @@ class TranslationSQL(object):
 
         with self as s:
             ents = s.query(GachaPresenceEntry).filter(GachaPresenceEntry.card_id.in_(cards)).all()
+            limflags = s.query(GachaRewardEntry).options(load_only("gacha_id", "reward_id")) \
+                .filter(GachaRewardEntry.reward_id.in_(cards), GachaRewardEntry.limited_flag == 1).all()
+
+        limflags = set((x.gacha_id, x.reward_id) for x in limflags)
 
         def getgacha(gid):
             if gid in gacha_map:
@@ -365,7 +476,8 @@ class TranslationSQL(object):
                 name = None
 
             ga[e.card_id].append(Availability(Availability._TYPE_GACHA, name,
-                utc.localize(datetime.utcfromtimestamp(e.avail_start)), utc.localize(datetime.utcfromtimestamp(e.avail_end)), []))
+                utc.localize(datetime.utcfromtimestamp(e.avail_start)), utc.localize(datetime.utcfromtimestamp(e.avail_end)), [],
+                (e.gacha_id_first, e.card_id) in limflags))
 
         [v.sort(key=lambda x: x.start) for v in ga.values()]
         [combine_availability(v) for v in ga.values()]
@@ -387,7 +499,7 @@ class TranslationSQL(object):
     def _get_history(self, nent):
         print("trace _get_history")
         with self as s:
-            rows = s.query(HistoryEntry).order_by(HistoryEntry.time.desc())
+            rows = s.query(HistoryEventEntry).order_by(HistoryEventEntry.start_time.desc())
 
             if nent:
                 rows = rows.limit(nent)
@@ -395,8 +507,8 @@ class TranslationSQL(object):
             yield from gv
 
 class TranslationEngine(TranslationSQL):
-    def __init__(self, data_source, use_satellite, override_url=None):
-        super().__init__(use_satellite, override_url)
+    def __init__(self, data_source, override_url=None):
+        super().__init__(override_url)
         self.dsrc = data_source
         self.cache_id = -1
         self.k2r = {}
@@ -410,13 +522,6 @@ class TranslationEngine(TranslationSQL):
         self.availability_cache = {}
 
         self.cache_id = dv
-
-    def translate_name(self, kanji):
-        if self.cache_id != self.dsrc.data.version:
-            self.kill_caches(self.dsrc.data.version)
-
-        k = self.k2r.get(kanji, kanji)
-        return k
 
     def get_history(self, nent):
         if self.cache_id != self.dsrc.data.version:

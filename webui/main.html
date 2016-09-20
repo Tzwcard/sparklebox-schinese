@@ -2,6 +2,22 @@
 <html>
 <head>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <!-- Customized Icons Set -->
+  <link rel="icon" type="image/png" href="/static/favicon-16x16.png" sizes="16x16">
+  <link rel="icon" type="image/png" href="/static/favicon-32x32.png" sizes="32x32">
+  <link rel="apple-touch-icon" href="static/apple-touch-icon-precomposed.png">
+  <link rel="icon" type="image/png" href="/static/android-chrome-192x192.png" sizes="192x192">
+  <link rel="manifest" href="/static/manifest.json">
+  <link rel="mask-icon" href="/static/safari-pinned-tab.svg" color="#5bbad5">
+  <meta name="apple-mobile-web-app-title" content="Starlight DB">
+  <meta name="application-name" content="Starlight DB">
+  <meta name="msapplication-TileColor" content="#94e4ff">
+  <meta name="msapplication-TileImage" content="/static/mstile-144x144.png">
+  <meta name="msapplication-config" content="/static/browserconfig.xml">
+  <meta name="theme-color" content="#000000">
+  <!-- Not yet <meta name="apple-mobile-web-app-capable" content="yes">-->
+  
   {% if is_dev %}
   <link rel="stylesheet/less" type="text/css" href="{{ handler.static_url("css/main.less") }}" />
   <script type="text/javascript" src="{{ handler.static_url("js/less.js") }}"></script>
@@ -20,9 +36,23 @@
 {% import random %}
 
 <body>
+  {% include header.html %}
+
   <div class="container">
     <input type="text" id="search" placeholder="{{ _("搜索爱豆") }}" onkeyup="suggest(this, this.value)">
     <div id="suggestions"></div>
+  </div>
+
+  <div class="container">
+    {% for char in birthdays %}
+    <div class="birthday_banner r_{{ enums.attribute(char.type) }}" style="display:none" data-birthday="{{ char.birth_month }}/{{ char.birth_day }}">
+      <div class="ribbon r_{{ enums.attribute(char.type) }}"></div>
+      <div class="icon icon_{{ starlight.data.cards_belonging_to_char(char.chara_id)[-1] }}" style="position:absolute;top:5px;left:5px;"></div>
+      今天是 <a href="/char/{{ char.chara_id }}">{{ char.name }}</a> 的生日<small>（<span class="where_the_birthday_is"><!-- strings in home.js  --></span>）</small>。<!-- starlight.en.westernized_name(char).split()[0] --><br>
+      生日快乐！({{ char.birth_month }}/{{ char.birth_day }})
+    </div>
+    {% end %}
+    <script> birthday_hider_init(); </script>
   </div>
 
   <div class="container">
@@ -35,13 +65,13 @@
       <div class="header">
         <span class="item left">活动: <b>{% raw tlable(event.name) %}</b></span>
         <span class="item ext"></span>
-        <span class="item right">结束倒计时：<span class="counter" data-count-to="{{ event.end_date.timestamp() }}">meme</span></span>
+        <span class="item right">结束倒计时：<span class="counter" data-count-to="{{ event.end_date.timestamp() }}">(JS?)</span></span>
       </div>
       <div class="content" style="background:#333;">
         <div class="iconex_row">
           <span>开始肝吧。<br>活动奖励:</span>
           {% for cid in reward_list %}
-          {% raw icon_ex(cid, request.is_low_bandwidth) %}
+          {% raw webutil.icon_ex(cid, request.is_low_bandwidth) %}
           {% end %}
         </div>
       </div>
@@ -54,13 +84,25 @@
         <span class="item left">目前卡池</span>
         {% end %}
         <span class="item ext"></span>
-        <span class="item right">结束倒计时：<span class="counter" data-count-to="{{ gacha.end_date.timestamp() }}">meme</span></span>
+        <span class="item right">
+          结束倒计时：<span class="counter" data-count-to="{{ gacha.end_date.timestamp() }}">(JS?)</span>
+          {% if gacha.rates != gacha.rates._REGULAR_RATES %}
+          <small>概率: R {{ gacha.rates.r }}% / SR {{ gacha.rates.sr }}% / SSR {{ gacha.rates.ssr }}%</small>
+          {% end %}
+        </span>
       </div>
       {% if available %}
       <div class="content" style="background:#333;text-align:left;">
-        {% for ent in available %}
-        {% raw icon_ex(ent, request.is_low_bandwidth) %}
-        {% end %}
+        <div class="iconex_row">
+          {% for ent in available %}
+          {% raw webutil.icon_ex(ent, request.is_low_bandwidth) %}
+          {% end %}
+        </div>
+        <a href="/gacha/{{ gacha.id }}">（完整可抽列表）</a>
+      </div>
+      {% else %}
+      <div class="content" style="background:#333;text-align:left;">
+        <a href="/gacha/{{ gacha.id }}">（完整可抽列表）</a>
       </div>
       {% end %}
       {% end %}
@@ -68,60 +110,33 @@
     {% end %}
   </div>
 
-  <div class="container" style="max-width:1280px; display:none">
-    <div class="box black">
-      <div class="contents">
-        <center id="splash"><p>This is your working space.<br>
-                   卡牌数值可从上方搜索以对比。</p>
-        </center>
-        <table id="workspace_table" class="table">
-          <tr>
-            <th colspan="2">偶像</th>
-            <th>生命</th>
-            <th>Vocal</th>
-            <th>Visual</th>
-            <th>Dance</th>
-            <th>特技</th>
-          </tr>
-          <tr id="compare_idol_template" style="display:none">
-            <td id="ci_icon" style="width:1%">{% raw icon(0) %}</td>
-            <td id="ci_name" style="width:180px"></td>
-
-            <td class="life"   id="ci_li">Li</td>
-            <td class="vocal"  id="ci_vo">Vo</td>
-            <td class="visual" id="ci_vi">Vi</td>
-            <td class="dance"  id="ci_da">Da</td>
-            <td id="ci_sk" style="font-size:70%">Sk</td>
-          </tr>
-        </table>
-      </div>
-    </div>
+  <div class="container">
+    <!-- custom homepage text starts here. -->
+    {% include "partials/frontpage_text.html" %}
+    <!-- custom homepage text ends here. -->
   </div>
 
   <div class="container">
-    <p><s>This is temporary while I sort stuff out...</s> There is nothing more permanent than temporary.</p>
-    <ul>
-      <li><a href="/skill_table">按特技检索</a></li>
-      <li><a href="/lead_skill_table">按领队技能检索</a></li>
-      <li><a href="https://twitter.com/n_triangle_dev">Follow the Holy Constituency on Twitter</a></li>
-      <li><a href="/static/api.html">Developers who don't want to maintain their own data should check out the API.</a></li>
-    </ul>
-  </div>
+    {% for history_entry in history %}
 
-  <div class="container">
-    <p><small><a target="_blank" href="{{ handler.static_url("dots.html") }}">这些点是干嘛的？</a></small></p>
-    <div class="box black">
-    {% for new_list in history %}
-    {% include new_list_partial.html %}
+    {% if history_entry.type() == 2 %}
+      {% include partials/hist_event.html %}
+    {% elif history_entry.type() == 3 %}
+      {% include partials/hist_gacha.html %}
+    {% elif history_entry.type() == 4 %}
+      {% include partials/hist_new_ns.html %}
+    {% else %}
+      {# omitted #}
     {% end %}
-    </div>
+
+    {% end %}
   </div>
 
   <div class="container">
-    <p><a href="/history">&gt; 往期加入卡牌</a></p>
+    <p><a href="/history">更多历史记录/a></p>
   </div>
 
-  {% include footer.html %}
+  {% include partials/footer.html %}
   <script> tlinject_activate(); </script>
   <script> event_counter_init(); </script>
 </body>

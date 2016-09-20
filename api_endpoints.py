@@ -12,29 +12,26 @@ import pytz
 import itertools
 import enums
 from datetime import datetime, timedelta
+from functools import partial
+import webutil
 
-def tlable_make_assr(text):
-    if not text:
-        return "@!@!"
-    else:
-        salt = os.getenv("TLABLE_SALT").encode("utf8")
-        return base64.b64encode(hashlib.sha256(text.encode("utf8") + salt).digest()).decode("utf8")
+class CORSBlessMixin(object):
+    """ Implements HTTP OPTIONS to allow requests via XHR on modern browsers. """
+    def options(self, *args, **kwargs):
+        self.set_status(204)
+        self.set_cors_policy()
 
-def tlable(text, write=1):
-    text = text.replace("\n", " ")
-    if write:
-        return """<span class="tlable" data-summertriangle-assr="{1}">{0}</span>""".format(
-            tornado.escape.xhtml_escape(text), tlable_make_assr(text))
-    else:
-        return """<span class="tlable">{0}</span>""".format(
-            tornado.escape.xhtml_escape(text))
+    def set_cors_policy(self):
+        self.set_header("Access-Control-Allow-Origin", "*")
 
 @route("/api/v1/read_tl")
-class TranslateReadAPI(tornado.web.RequestHandler):
+class TranslateReadAPI(CORSBlessMixin, tornado.web.RequestHandler):
     """ Queries database for cs translation entries """
 
     @tornado.web.asynchronous
     def post(self):
+        self.set_cors_policy()
+
         try:
             load = json.loads(self.request.body.decode("utf8"))
         except ValueError:
@@ -57,7 +54,7 @@ class TranslateReadAPI(tornado.web.RequestHandler):
     def complete(self, ret):
         from_db = {tlo.key: tlo.english for tlo in ret if tlo.english != tlo.key}
         self.set_header("Content-Type", "application/json; charset=utf-8")
-        self.write(json.dumps(from_db))
+        json.dump(from_db, self, ensure_ascii=0)
         self.finish()
 
 
@@ -80,7 +77,7 @@ class TranslateWriteAPI(tornado.web.RequestHandler):
         s = load.get("tled", "").strip()
         assr = load.get("security")
         #print(key, s, assr)
-        if not (key and s and assr) or tlable_make_assr(key) != assr:
+        if not (key and s and assr) or webutil.tlable_make_assr(key) != assr:
             self.set_status(400)
             return
 
@@ -131,10 +128,12 @@ def extend_card(self, d):
         if d["has_spread"] else None
     d["card_image_ref"] = "/".join((self.settings["image_host"], "card", "{0}.png".format(d["id"])))
     d["sprite_image_ref"] = "/".join((self.settings["image_host"], "chara2", str(d["chara_id"]), "{0}.png".format(d["pose"])))
+    d["icon_image_ref"] = "/".join((self.settings["image_host"], "icon_card", "{0}.png".format(d["id"])))
     d["attribute"] = enums.api_char_type(d["attribute"])
 
 def extend_char(self, d):
     d["type"] = enums.api_char_type(d["type"])
+    d["icon_image_ref"] = "/".join((self.settings["image_host"], "icon_char", "{0}.png".format(d["chara_id"])))
 
 EXTEND_FUNC = {"skill_data_t": extend_skill,
                "leader_skill_data_t": extend_lead_skill,
@@ -195,7 +194,7 @@ class APIUtilMixin(object):
                 yield obj
 
 @route(r"/api/v1/([a-z_]+)_t/(.+)")
-class ObjectAPI(HandlerSyncedWithMaster, APIUtilMixin):
+class ObjectAPI(CORSBlessMixin, HandlerSyncedWithMaster, APIUtilMixin):
     SELECTOR_ALL = object()
     SELECTOR_RANDOM = object()
 
@@ -210,6 +209,8 @@ class ObjectAPI(HandlerSyncedWithMaster, APIUtilMixin):
         return real_spec
 
     def get(self, objectid, spec):
+        self.set_cors_policy()
+
         try:
             ids = self.expand_spec(spec)
         except Exception as e:
@@ -283,10 +284,73 @@ class ObjectAPI(HandlerSyncedWithMaster, APIUtilMixin):
         if self.settings["is_dev"]:
             json.dump({"result": h(ids, cfg)}, self, ensure_ascii=0, sort_keys=1, indent=2)
         else:
-            json.dump({"result": h(ids, cfg)}, self)
+            json.dump({"result": h(ids, cfg)}, self, ensure_ascii=0)
 
-@route(r"/api/v1/happening/(now|-?[0-9+])")
-class HappeningAPI(HandlerSyncedWithMaster, APIUtilMixin):
+@route(r"/api/v1/list/card_t")
+class CardListAPI(CORSBlessMixin, HandlerSyncedWithMaster, APIUtilMixin):
+    KEYS = ["id", "chara_id", "attribute", "has_spread", "pose", "title", "name_only",
+        "hp_min", "hp_max", "vocal_min", "vocal_max", "visual_min", "visual_max",
+        "dance_min", "dance_max", "bonus_hp", "bonus_dance", "bonus_vocal", "bonus_visual",
+        "evolution_id"]
+    STRUCTS = ["rarity_dep"]
+
+    def stub_object(self, obj, user_want_keys):
+        base = {}
+
+        user_want_keys = user_want_keys or (self.KEYS + self.STRUCTS)
+
+        for key in self.KEYS:
+            if key in user_want_keys:
+                base[key] = getattr(obj, key)
+
+        for key in self.STRUCTS:
+            if key in user_want_keys:
+                ob = getattr(obj, key)
+                base[key] = self.fix_namedtuples(ob.__class__.__name__, ob._asdict(), {"stubs": "no"})
+
+        self.post_stubbing(base, obj)
+
+        base.update(APIUtilMixin.stub_object(obj))
+        return base
+
+    def post_stubbing(self, base, obj):
+        base["conventional"] = obj.chara.conventional
+        base["chara"] = APIUtilMixin.stub_object(obj.chara)
+
+    def list_objects(self):
+        return starlight.data.cards([chain[0] for _, chain in starlight.data.id_chain.items()])
+
+    def get(self):
+        self.set_cors_policy()
+
+        ks_raw = self.get_argument("keys", "")
+        if ks_raw:
+            normalized = (x.lower().strip() for x in ks_raw.split(","))
+        else:
+            normalized = ""
+        f = partial(self.stub_object, user_want_keys=list(normalized))
+        roots = map(f, self.list_objects())
+
+        self.set_header("Content-Type", "application/json; charset=utf-8")
+        if self.settings["is_dev"]:
+            json.dump({"result": list(roots)}, self, ensure_ascii=0, sort_keys=1, indent=2)
+        else:
+            json.dump({"result": list(roots)}, self, ensure_ascii=0)
+
+@route(r"/api/v1/list/char_t")
+class CharListAPI(CardListAPI):
+    KEYS = ["chara_id", "conventional", "kanji_spaced", "kana_spaced"]
+    STRUCTS = []
+
+    def list_objects(self):
+        # TODO proper way to get all charids
+        return starlight.data.charas(starlight.data.all_chara_id_to_cards())
+
+    def post_stubbing(self, base, obj):
+        base["cards"] = starlight.data.cards_belonging_to_char(obj.chara_id)
+
+@route(r"/api/v1/happening/(now|-?[0-9]+)")
+class HappeningAPI(CORSBlessMixin, HandlerSyncedWithMaster, APIUtilMixin):
     def fix_datetime(self, obj):
         if isinstance(obj, datetime):
             fmt = self.get_argument("datetime", "unix")
@@ -298,6 +362,8 @@ class HappeningAPI(HandlerSyncedWithMaster, APIUtilMixin):
         raise TypeError()
 
     def get(self, timespec):
+        self.set_cors_policy()
+
         if timespec == "now":
             timespec = datetime.utcnow()
         else:
@@ -322,7 +388,24 @@ class HappeningAPI(HandlerSyncedWithMaster, APIUtilMixin):
         if self.settings["is_dev"]:
             json.dump(payload, self, ensure_ascii=0, sort_keys=1, indent=2, default=self.fix_datetime)
         else:
-            json.dump(payload, self, default=self.fix_datetime)
+            json.dump(payload, self, ensure_ascii=0, default=self.fix_datetime)
+
+@route(r"/api/v1/info")
+class InformationAPI(CORSBlessMixin, HandlerSyncedWithMaster):
+    def get(self):
+        self.set_cors_policy()
+        self.set_header("Content-Type", "application/json; charset=utf-8")
+
+        payload = {
+            "truth_version": starlight.data.version,
+            "api_major": 1,
+            "api_revision": 2,
+        }
+
+        if self.settings["is_dev"]:
+            json.dump(payload, self, ensure_ascii=0, sort_keys=1, indent=2)
+        else:
+            json.dump(payload, self, ensure_ascii=0)
 
 @route(r"/api/private/va_table")
 class VATable(HandlerSyncedWithMaster):
@@ -336,4 +419,4 @@ class VATable(HandlerSyncedWithMaster):
         has_title_call = load["has_title_call"]
         va_ids = load["va_ids"]
         unique = list(set(va_ids))
-        self.render("va_table_partial.html", include_title_call=has_title_call, va_id=unique, **self.settings)
+        self.render("partials/va_table_partial.html", include_title_call=has_title_call, va_id=unique, **self.settings)

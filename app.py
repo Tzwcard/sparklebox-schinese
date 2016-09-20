@@ -5,6 +5,7 @@ import tornado.httpserver
 import tornado.ioloop
 import tornado.web
 import os
+import tornado.options
 import json
 import ipaddress
 import functools
@@ -15,30 +16,17 @@ from collections import namedtuple
 import models
 import dispatch
 import endpoints
+import api_endpoints
 import enums
 import starlight
 import analytics
+import webutil
 from starlight import private_data_path
 
 def early_init():
     os.chdir(os.path.dirname(os.path.realpath(__file__)))
-    if os.environ.get("CRED_FILE", ""):
-        with open(os.environ.get("CRED_FILE"), "r") as f:
-            for k, v in json.load(f)["CONFIG"]["CONFIG_VARS"].items():
-                os.environ[k] = v
 
-    if os.environ.get("DEV", ""):
-        # load template from disk every time it's rendered.
-        # helpful for development, but is slow.
-        def _swizzle_BaseLoader_load(self, name, parent_path=None):
-            name = self.resolve_path(name, parent_path=parent_path)
-            return self._create_template(name)
-
-        def _swizzle_StaticFileHandler_should_return_304(self):
-            return 0
-        tornado.template.BaseLoader.load = _swizzle_BaseLoader_load
-        tornado.web.StaticFileHandler.should_return_304 = _swizzle_StaticFileHandler_should_return_304
-    elif not os.environ.get("DISABLE_HTTPS_ENFORCEMENT", ""):
+    if not os.environ.get("DISABLE_HTTPS_ENFORCEMENT", "") and not os.environ.get("DEV", ""):
         # production mode: force https usage due to local storage issues
         # also we don't want the NSA knowing you play chinese cartoon games
         def _swizzle_RequestHandler_prepare(self):
@@ -83,20 +71,19 @@ def main():
     early_init()
     in_dev_mode = os.environ.get("DEV")
     image_server = os.environ.get("IMAGE_HOST", "")
+    tornado.options.parse_command_line()
     application = tornado.web.Application(dispatch.ROUTES,
         template_path="webui",
         static_path="static",
         image_host=image_server,
-        autoreload=1 if in_dev_mode else 0,
+        debug=in_dev_mode,
         is_dev=in_dev_mode,
 
-        tle=models.TranslationEngine(starlight, use_satellite=1),
+        tle=models.TranslationEngine(starlight),
         enums=enums,
         starlight=starlight,
-        tlable=endpoints.tlable,
-        icon=endpoints.icon,
-        icon_ex=endpoints.icon_ex,
-        audio=endpoints.audio,
+        tlable=webutil.tlable,
+        webutil=webutil,
         analytics=analytics.Analytics())
     http_server = tornado.httpserver.HTTPServer(application, xheaders=1)
 

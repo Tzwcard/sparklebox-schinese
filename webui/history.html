@@ -16,15 +16,25 @@
 </head>
 
 <body>
+  {% include header.html %}
+
   <div class="container">
-    <div class="box black">
-    {% for new_list in history %}
-    {% include new_list_partial.html %}
+    {% for history_entry in history %}
+
+    {% if history_entry.type() == 2 %}
+      {% include partials/hist_event.html %}
+    {% elif history_entry.type() == 3 %}
+      {% include partials/hist_gacha.html %}
+    {% elif history_entry.type() == 4 %}
+      {% include partials/hist_new_ns.html %}
+    {% else %}
+      {# omitted #}
     {% end %}
-    </div>
+
+    {% end %}
   </div>
 
-  {% include footer.html %}
+  {% include partials/footer.html %}
   <script> tlinject_activate() </script>
 </body>
 </html>

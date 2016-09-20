@@ -9,51 +9,16 @@ import time
 import pytz
 import itertools
 import enums
+import table
 from datetime import datetime, timedelta
 
-import api_endpoints
-tlable = api_endpoints.tlable
-
-def icon(css_class):
-    return """<div class="icon icon_{0}"></div>""".format(css_class)
-
-def icon_ex(card_id, is_lowbw=0, collapsible=0):
-    rec = starlight.data.card(card_id)
-    if not rec:
-        btext = "(?) bug:{0}".format(card_id)
-        ish = """<div class="profile">
-            <div class="icon icon_unknown"></div>
-            <div class="profile_text {0}"><b>Mysterious Kashikoi Person</b><br>{btext}</div>
-        </div>""".format("hides_under_mobile" if collapsible else "", btext=btext)
-        return """<a class="noline">{ish}</a>""".format(ish=ish)
-    else:
-        if not is_lowbw:
-            link = "/char/{rec.chara_id}#c_{rec.id}_head".format(rec=rec)
-        else:
-            link = "/card/{rec.id}".format(rec=rec)
-
-        btext = "({0}) {1}".format(enums.rarity(rec.rarity), tlable(rec.title, write=0) if rec.title_flag else "")
-        ish = """<div class="profile">
-            <div class="icon icon_{rec.id} msprites m{1} {2}"></div>
-            <div class="profile_text {3}"><b>{0}</b><br>{btext}</div>
-        </div>""".format(tornado.escape.xhtml_escape(rec.chara.name),#chara.conventional
-            enums.stat_dot(rec.best_stat),
-            "m" + enums.skill_class(rec.skill.skill_type) if rec.skill else "",
-            "hides_under_mobile" if collapsible else "",
-            rec=rec, btext=btext)
-        return """<a href="{link}" class="noline">{ish}</a>""".format(rec=rec, ish=ish, link=link)
-
-def audio(object_id, use, index):
-    a = (object_id << 40) | ((use & 0xFF) << 24) | ((index & 0xFF) << 16) | 0x11AB
-    # make everything 8 bytes long for reasons
-    a &= 0xFFFFFFFFFFFFFFFF
-    a ^= 0x1042FC1040200700
-    basename = hex(a)[2:]
-
-    return "va2/{0}.mp3".format(basename)
+import webutil
 
 @route(r"/([0-9]+-[0-9]+-[0-9]+)?")
 class Home(HandlerSyncedWithMaster):
+    def head(self, pretend_date):
+        return self.get(pretend_date)
+
     def get(self, pretend_date):
         if pretend_date:
             now = pytz.utc.localize(datetime.strptime(pretend_date, "%Y-%m-%d"))
@@ -69,18 +34,18 @@ class Home(HandlerSyncedWithMaster):
         gachas = starlight.data.gachas(now)
         gacha_limited = starlight.data.limited_availability_cards(gachas)
 
-        recent_history = self.settings["tle"].get_history(5)
+        recent_history = self.settings["tle"].get_history(10)
 
         # cache priming has a high overhead so prime all icons at once
         preprime_set = set()
-        for h in [x.asdict() for x in recent_history]:
-            for k in ["n", "r", "sr", "ssr", "event"]:
-                preprime_set.update(h.get(k, ()))
+        for h in recent_history:
+            preprime_set.update(h.card_list())
         starlight.data.cards(preprime_set)
 
         self.render("main.html", history=recent_history,
             events=zip(events, event_rewards),
-            la_cards=zip(gachas, gacha_limited), **self.settings)
+            la_cards=zip(gachas, gacha_limited),
+            birthdays=starlight.data.potential_birthdays(now), **self.settings)
         self.settings["analytics"].analyze_request(self.request, self.__class__.__name__)
 
 @route("/suggest")
@@ -88,9 +53,12 @@ class SuggestNames(HandlerSyncedWithMaster):
     def get(self):
         names = {value.conventional.lower(): [value.kanji, key] for key, value in starlight.data.names.items()}#conventional value.conventional
         names.update({str(key): [value.kanji, key] for key, value in starlight.data.names.items()})#chara_id
-        names.update({str(value.kanji): [value.kanji, key] for key, value in starlight.data.names.items()})#kanji
+        
+        # additional keyword set
         names.update({str(value.kana_spaced): [value.kanji, key] for key, value in starlight.data.names.items()})#kana_spaced
-        names.update({str(value.translated): [value.kanji, key] for key, value in starlight.data.names.items()})#translated
+        names.update({str(value.kanji): [value.kanji, key] for key, value in starlight.data.names.items()})#kanji
+        names.update({str(value.translated): [value.translated + " *" , key] for key, value in starlight.data.names.items()})#translated
+        names.update({str(value.translated_cht): [value.translated_cht + " *", key] for key, value in starlight.data.names.items()})#translated_cht
 		
         self.set_header("Content-Type", "application/json")
         self.set_header("Cache-Control", "no-cache")
@@ -114,31 +82,6 @@ class EventD(HandlerSyncedWithMaster):
             self.write("{0}".format(evedt.strftime("%B %d, %Y %H:%M")))
         else:
             self.write("None")
-
-
-@route(r"/gacha")
-class GachaTable(HandlerSyncedWithMaster):
-    def get(self):
-        self.set_header("Content-Type", "text/plain; charset=utf-8")
-        self.write("Sorry, I'll get around to implementing this soon...")
-
-@route(r"/skill_table")
-class SkillTable(HandlerSyncedWithMaster):
-    def get(self):
-        self.render("skill_table.html",
-                    cards=starlight.data.cards(starlight.data.all_chain_ids()),
-                    **self.settings)
-        self.settings["analytics"].analyze_request(self.request, self.__class__.__name__)
-
-
-@route(r"/lead_skill_table")
-class LeadSkillTable(HandlerSyncedWithMaster):
-    def get(self):
-        self.render("lead_skill_table.html",
-                    cards=starlight.data.cards(starlight.data.all_chain_ids()),
-                    **self.settings)
-        self.settings["analytics"].analyze_request(self.request, self.__class__.__name__)
-
 
 @route(r"/char/([0-9]+)(/table)?")
 class Character(HandlerSyncedWithMaster):
@@ -167,7 +110,7 @@ class Character(HandlerSyncedWithMaster):
                 cards=acard,
                 use_table=use_table,
                 availability=availability,
-                now=pytz.utc.localize(datetime.now()),
+                now=pytz.utc.localize(datetime.utcnow()),
                 **self.settings)
             self.settings["analytics"].analyze_request(
                 self.request, self.__class__.__name__, {"chara": achar.conventional})
@@ -201,12 +144,149 @@ class Card(HandlerSyncedWithMaster):
             self.set_header("Content-Type", "text/html")
             self.render("card.html", cards=acard, use_table=use_table,
                 just_one_card=just_one_card, availability=availability,
-                now=pytz.utc.localize(datetime.now()), **self.settings)
+                now=pytz.utc.localize(datetime.utcnow()), **self.settings)
             self.settings["analytics"].analyze_request(
                 self.request, self.__class__.__name__, {"card_id": card_idlist})
         else:
             self.set_status(404)
             self.write("Not found.")
+
+# all the table handlers go here
+
+# Try to use ShortlinkTable.rendertable instead of directly rendering
+# a table template whenever possible, so we can make enhancements to
+# it apply globally to all tables.
+
+@route(r"/t/([A-Za-z]+)/([^/]+)")
+class ShortlinkTable(HandlerSyncedWithMaster):
+    # This shouldn't take too long.
+    # The full chain is pre-emptively loaded when any member is requested
+    def flip_chain(self, card):
+        return starlight.data.card(starlight.data.chain(card.series_id)[-1])
+
+    def rendertable(self, dataset, cards,
+                    allow_shortlink=1, table_name="自定义列表",
+                    template="generictable.html", **extra):
+        if isinstance(dataset, str):
+            filters, categories = table.select_categories(dataset)
+        else:
+            filters, categories = dataset
+
+        should_switch_chain_head = self.get_argument("plus", "NO") == "YES"
+        if should_switch_chain_head:
+            cards = list(map(self.flip_chain, cards))
+
+        extra.update(self.settings)
+
+        self.render(template,
+                    filters=filters,
+                    categories=categories,
+                    cards=cards,
+                    original_dataset=dataset,
+                    show_shortlink=allow_shortlink,
+                    table_name=table_name,
+                    is_displaying_awake_forms=should_switch_chain_head,
+                    **extra)
+
+    def get(self, dataset, spec):
+        try:
+            idlist = webutil.decode_cardlist(spec)
+        except ValueError:
+            self.set_status(400)
+            self.write("The card list could not be parsed")
+            return
+
+        self.rendertable(dataset.upper(), starlight.data.cards(idlist))
+        self.settings["analytics"].analyze_request(self.request, self.__class__.__name__)
+
+@route(r"/skill_table")
+class SkillTable(ShortlinkTable):
+    def get(self):
+        self.rendertable("CASDE", starlight.data.cards(starlight.data.all_chain_ids()),
+            allow_shortlink=0,
+            table_name="Cards by skill")
+        self.settings["analytics"].analyze_request(self.request, self.__class__.__name__)
+
+@route(r"/lead_skill_table")
+class LeadSkillTable(ShortlinkTable):
+    def get(self):
+        self.rendertable("CAKL", starlight.data.cards(starlight.data.all_chain_ids()),
+            allow_shortlink=0,
+            table_name="Cards by lead skill")
+        self.settings["analytics"].analyze_request(self.request, self.__class__.__name__)
+
+@route(r"/table/([A-Za-z]+)/([0-9\,]+)")
+class CompareCard(ShortlinkTable):
+    def get(self, dataset, card_idlist):
+        card_ids = [int(x) for x in card_idlist.strip(",").split(",")]
+
+        chains = [starlight.data.chain(id) for id in card_ids]
+        unique = []
+        for c in chains:
+            if c[0] not in unique:
+                unique.append(c[0])
+
+        acard = starlight.data.cards(unique)
+
+        if acard:
+            self.rendertable(dataset.upper(), acard, table_name="自定义列表")
+            self.settings["analytics"].analyze_request(
+                self.request, self.__class__.__name__, {"card_id": card_idlist})
+        else:
+            self.set_status(404)
+            self.write("Not found.")
+
+@route(r"/gacha(?:/([0-9]+))?")
+class GachaTable(ShortlinkTable):
+    def get(self, maybe_gachaid):
+        if maybe_gachaid:
+            maybe_gachaid = int(maybe_gachaid)
+            gachas = starlight.data.gacha_ids()
+
+            for gcid in gachas:
+                if gcid.id == maybe_gachaid:
+                    selected_gacha = gcid
+                    break
+            else:
+                selected_gacha = None
+        else:
+            now = pytz.utc.localize(datetime.utcnow())
+            gachas = starlight.data.gachas(now)
+
+            if gachas:
+                selected_gacha = gachas[0]
+            else:
+                selected_gacha = None
+
+        if selected_gacha is None:
+            self.set_status(404)
+            self.write("Not found. If there's no gacha happening right now, you'll have to specify an ID.")
+            return
+
+        availability_list = starlight.data.available_cards([selected_gacha])[0]
+        availability_list.sort(key=lambda x: x[0] or 9001)
+
+        card_list = starlight.data.cards(av[1] for av in availability_list)
+        limited_flags = {av[1]: av[2] for av in availability_list}
+
+        filters, categories = table.select_categories("CASDE")
+
+        lim_cat = table.CustomBool()
+        lim_cat.header_text = "限？"
+        lim_cat.values = limited_flags
+        lim_cat.yes_text = "○"
+        lim_cat.no_text = "－"
+
+        categories.insert(0, lim_cat)
+
+        self.rendertable( (filters, categories),
+            cards=card_list,
+            allow_shortlink=0,
+            table_name="扭蛋：{0}".format(selected_gacha.name),
+            template="ext_gacha_table.html",
+            gacha=selected_gacha)
+        self.settings["analytics"].analyze_request(self.request, self.__class__.__name__,
+            {"gid": maybe_gachaid})
 
 
 @route(r"/sprite_go/([0-9]+).png")
@@ -247,24 +327,12 @@ class History(HandlerSyncedWithMaster):
         all_history = self.settings["tle"].get_history(nent=None)
 
         preprime_set = set()
-        for h in [x.asdict() for x in all_history]:
-            for k in ["n", "r", "sr", "ssr", "event"]:
-                preprime_set.update(h.get(k, ()))
+        for h in all_history:
+            preprime_set.update(h.card_list())
         starlight.data.cards(preprime_set)
 
         self.render("history.html", history=all_history, **self.settings)
         self.settings["analytics"].analyze_request(self.request, self.__class__.__name__)
-
-@route(r"/dbgva/([^/]+)")
-@dev_mode_only
-class DebugViewVA(HandlerSyncedWithMaster):
-    def get(self, db):
-        loaded = list(starlight.card_va_by_object_id(int(db)))
-        fields = loaded[0].__class__._fields
-
-        self.set_header("Content-Type", "text/html")
-        self.render("debug_view_database.html", data=loaded,
-                    fields=fields, **self.settings)
 
 @route(r"/tl_cacheall")
 @dev_mode_only
@@ -306,3 +374,26 @@ class DebugViewTLExtreme(tornado.web.RequestHandler):
         self.set_header("Content-Type", "text/html")
         self.render("debug_view_database.html", data=gen,
                     fields=fields, **self.settings)
+
+@route(r"/clear_remote_cache")
+@dev_mode_only
+class DebugKillCache(tornado.web.RequestHandler):
+    def get(self):
+        self.settings["tle"].kill_caches(0)
+        starlight.data = starlight.DataCache(starlight.data.version)
+
+        self.write("ok.")
+
+@route(r"/ping")
+class Ping(tornado.web.RequestHandler):
+    def head(self):
+        return
+
+    def get(self):
+        self.write("{} {} {} {} {}".format(
+            starlight.data.version,
+            starlight.last_version_check,
+            len(starlight.data.card_cache),
+            len(starlight.data.char_cache),
+            "It's working"
+        ))

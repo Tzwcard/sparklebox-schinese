@@ -4,15 +4,18 @@
   {% set cl = new_list.asdict() %}
   <span class="item left">{{ new_list.dt_string() }}</span>
   <span class="item ext"></span>
-  <span class="item right"><a href="/card/{{ ",".join(map(str, itertools.chain(*(x for _, x in cl.items())))) }}">批量打开</a></span>
+  <span class="item right">
+    {% set batch_list = ",".join(map(str, itertools.chain(*(x for _, x in cl.items())))) %}
+    <a href="/card/{{ batch_list }}">批量打开</a> / <a href="/table/CASDE/{{ batch_list }}">列表</a>
+  </span>
 </div>
 <div class="contents" style="background:#333;padding:10px">
   {% for key in ["event", "ssr", "sr", "r", "n"] %}
   {% if cl[key] %}
   <div class="iconex_row">
-    <a href="/card/{{ ",".join(map(str, cl[key])) }}" >{% raw icon(key) %}</a>
+    <a href="/card/{{ ",".join(map(str, cl[key])) }}" >{% raw webutil.icon(key) %}</a>
     {% for card in cl[key] %}
-    {% raw icon_ex(card, request.is_low_bandwidth) %}
+    {% raw webutil.icon_ex(card, request.is_low_bandwidth) %}
     {% end %}
   </div>
   {% end %}

@@ -47,17 +47,28 @@ function suggest(that, text) {
     document.getElementById("suggestions").innerHTML = ""
     console.log(found)
 
+    chara_ids = []
+    found_i = []
     for (var i = 0; i < found.length; i++) {
+        var now_id = window.name_completion_list [found [i] [2]] [1]// getting actual chara_id for results
+        var k = chara_ids.indexOf(now_id)
+        if (k == -1) {
+            chara_ids.push(now_id)// existed chara_id would be ignored at the array
+            found_i.push([found[i][0], found[i][1], found[i][2]])// first "found" array of result would be logged
+        }
+    }
+
+    for (var i = 0; i < chara_ids.length; i++) {
         var n = document.createElement("a");
 
         put = "<span class='highlight'>"
-        aname = window.name_completion_list[found[i][2]][0]
-        s1 = aname.slice(0, found[i][1])
-        s2 = aname.slice(found[i][1], found[i][1] + found[i][0])
-        s3 = aname.slice(found[i][1] + found[i][0])
-
+        aname = window.name_completion_list[chara_ids[i]][0]// found[i][2] is replaced with actual ID (chara_ids[i]), but all result would applying "key" keyword appearance
+        s1 = aname.slice(0, found_i[i][1])
+        s2 = aname.slice(found_i[i][1], found_i[i][1] + found_i[i][0])
+        s3 = aname.slice(found_i[i][1] + found_i[i][0])
+        
         n.innerHTML = s1 + put + s2 + "</span>" + s3
-        n.href = "/char/" + window.name_completion_list[found[i][2]][1]
+        n.href = "/char/" + chara_ids[i]
         document.getElementById("suggestions").appendChild(n)
     }
 }
@@ -68,8 +79,15 @@ function pad_digits(number, digits) {
 }
 
 function ec_count(that) {
+    var expired = 0;
     var d = new Date()
     var msLeft = (parseFloat(that.getAttribute("data-count-to")) * 1000) - d.getTime()
+
+    if (msLeft < 0) {
+        expired = 1;
+        msLeft = -msLeft;
+    }
+
     var seconds = msLeft / 1000
     var secondsOnly = seconds % 60
     var minutes = (seconds - secondsOnly) / 60
@@ -80,8 +98,13 @@ function ec_count(that) {
 
     var s = pad_digits(hoursOnly, 2) + ":" + pad_digits(minutesOnly, 2) + ":" + pad_digits(secondsOnly | 0, 2)
     if (days) {
-        s = days + (days == 1? " day, " : " days, ") + s
+        s = days + "天，" + s
     }
+
+    if (expired) {
+        s = "（已于 " + s + " 前结束）";
+    }
+
     that.textContent = s
 }
 
@@ -95,5 +118,52 @@ function event_counter_init() {
                 ec_count(ec[i]);
             }
         }, 500);
+    }
+}
+
+// TODO: is there a way to ask the browser for this value instead of hardcoding it here?
+JST_MINUTES_LEFT_OF_UTC = -540;
+MINUTES_TO_MILLIS = 60 * 1000;
+
+A_SECOND_BEFORE_MINAMIS_BIRTHDAY = new Date(2016, 6, 26, 7, 59, 59, 0);
+ACTUALLY_MINAMIS_BIRTHDAY = new Date(2016, 6, 26, 8, 0, 0, 0);
+
+function birthday_hider_init() {
+    var els = document.querySelectorAll(".birthday_banner");
+
+    // don't even bother trying to trigger this.
+    // you need to be in PDT and have the server give you the birthday code.
+    var today;
+    if (window.location.hash == "#testbirthdaypls")
+        today = A_SECOND_BEFORE_MINAMIS_BIRTHDAY;
+    else if (window.location.hash == "#testarealbirthdaypls")
+        today = ACTUALLY_MINAMIS_BIRTHDAY;
+    else
+        today = new Date();
+
+    // here, we calculate the current JST date
+    // basically, javascript date arithmetic sucks ass
+    var minutes_left_of_utc = today.getTimezoneOffset();
+    // we're going right, not left
+    var jst_minute_offset = -(JST_MINUTES_LEFT_OF_UTC - minutes_left_of_utc);
+
+    console.log("we're " + minutes_left_of_utc + " minutes off UTC");
+    console.log("we need to add " + jst_minute_offset + " min to our time to get to JST");
+
+    // this date will have the wrong timezone, but we do not care
+    var jsttoday = new Date(today.getTime() + (jst_minute_offset * MINUTES_TO_MILLIS));
+    console.log("it's " + jsttoday + " in Japan");
+
+    for (var i = 0; i < els.length; i++) {
+        var el = els[i];
+        var date = el.getAttribute("data-birthday").split("/");
+
+        if (parseInt(date[0]) == jsttoday.getMonth() + 1 && parseInt(date[1]) == jsttoday.getDate()) {
+            el.style.display = "block";
+            el.querySelector(".where_the_birthday_is").textContent = "日本时间";
+        } else if (parseInt(date[0]) == today.getMonth() + 1 && parseInt(date[1]) == today.getDate()) {
+            el.style.display = "block";
+            el.querySelector(".where_the_birthday_is").textContent = "在你的时区";
+        }
     }
 }
