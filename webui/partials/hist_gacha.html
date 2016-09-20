@@ -27,16 +27,16 @@
 
     <small>
       {% if history_entry.added_cards %}
-      <a href="/card/{{ history_entry.card_urlspec() }}">Batch</a>,
-      <a href="/table/CASDE/{{ history_entry.card_urlspec() }}">Table</a>,
+      <a href="/card/{{ history_entry.card_urlspec() }}">批量打开</a> / 
+      <a href="/table/CASDE/{{ history_entry.card_urlspec() }}">Table</a> / 
       {% end %}
-      <a href="/gacha/{{ history_entry.referred_id() }}">Full availability list</a>
+      <a href="/gacha/{{ history_entry.referred_id() }}">完整可抽列表</a>
       -
-      Gacha available from
+      扭蛋开展时间：
       <span class="time_localize" data-ts="{{ history_entry.start_time }}" data-fmt="date">{{ history_entry.start_dt_string() }}</span>
-      to
+      ~
       <span class="time_localize" data-ts="{{ history_entry.end_time }}" data-fmt="date">{{ history_entry.end_dt_string() }}</span>
-      ({{ "{:.1f}".format(history_entry.length_in_days()) }} days).
+      (共 {{ "{:.1f}".format(history_entry.length_in_days()) }} 天)
     </small>
   </div>
 </div>

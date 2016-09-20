@@ -15,7 +15,11 @@
     <script type="text/javascript" src="{{ handler.static_url("js/soundinliner.js") }}"></script>
     <script type="text/javascript" src="{{ handler.static_url("js/tlinject.js") }}"></script>
     {% if just_one_card %}
+<<<<<<< HEAD
     <title>卡牌: {{ enums.rarity(just_one_card.rarity) }} {{ just_one_card.chara.name }} (sldb)</title>
+=======
+    <title>卡牌：{{ enums.rarity(just_one_card.rarity) }} {{ just_one_card.chara.name }} (sldb)</title>
+>>>>>>> 40da194b37b0114a3a9b637434303618aad019cd
     {% else %}
     <title>{{ len(cards) }} cards (sldb)</title>
     {% end %}
