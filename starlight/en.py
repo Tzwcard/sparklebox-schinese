@@ -3,7 +3,7 @@ import functools
 import os
 import re
 
-NO_STRING_FMT = "<Voice ID {0}:6:{1} has no transcript, but you can still submit a translation for it.>"
+NO_STRING_FMT = "<语音 ID {0}:6:{1} 没有预设文本，但是你仍然可提交它的翻译。>"
 
 def westernized_name(chara):
     """Our conventionals are ordered Last First, but project-imas uses First Last."""
@@ -20,45 +20,45 @@ def westernized_name(chara):
 
 def availability_date_range(a, now):
     if a.start.year == a.end.year:
-        return "{0}; {1} ~ {2}".format(
-            a.start.strftime("%Y"),
-            a.start.strftime("%d %B"),
-            a.end.strftime("%d %B") if a.end < now else "present",
+        return "{0}{1} ~ {2}".format(
+            a.start.strftime("%Y年"),
+            a.start.strftime("%b%d日"),
+            a.end.strftime("%b%d日") if a.end < now else "至今",
         )
     else:
         return "{0} ~ {1}".format(
-            a.start.strftime("%Y %b %d"),
-            a.end.strftime("%Y %b %d") if a.end < now else "present",
+            a.start.strftime("%Y年%b%d日"),
+            a.end.strftime("%Y年%b%d日") if a.end < now else "至今",
         )
 
 def gap_date_range(a):
     delta = (a.end - a.start)
-    return "{0} ~ {1} ({2} d)".format(
-        a.start.strftime("%d %B"),
-        a.end.strftime("%d %B"),
+    return "{0} ~ {1} (共 {2} 日)".format(
+        a.start.strftime("%b%d日"),
+        a.end.strftime("%b%d日"),
         round(delta.days + (delta.seconds / 86400))
     )
 
 # skill describer
 
 SKILL_DESCRIPTIONS = {
-    1: """Perfect notes will receive a <span class="let">{0}</span>% score bonus""",
-    2: """Great/Perfect notes will receive a <span class="let">{0}</span>% score bonus""",
-    3: """Nice/Great/Perfect notes will receive a <span class="let">{0}</span>% score bonus""", #provisional
-    4: """you will gain an extra <span class="let">{0}</span>% combo bonus""",
-    5: """Great notes will become Perfect notes""",
-    6: """Nice/Great notes will become Perfect notes""",
-    7: """Bad/Nice/Great notes will become Perfect notes""",
-    8: """all notes will become Perfect notes""", #provisional
-    9: """Nice notes will not break combo""",
-    10: """Bad/Nice notes will not break combo""", #provisional
-    11: """your combo will not be broken""", #provisional
-    12: """you will not lose health""",
-    13: """all notes will restore <span class="let">{0}</span> health""", #provisional
-    14: """<span class="let">{1}</span> life will be consumed, then: Perfect notes receive a <span class="let">{0}</span>% score bonus, and Nice/Bad notes will not break combo""",
-    17: """Perfect notes will restore <span class="let">{0}</span> health""",
-    18: """Great/Perfect notes will restore <span class="let">{0}</span> health""", #provisional
-    19: """Nice/Great/Perfect notes will restore <span class="let">{0}</span> health""", #provisional
+    1: """使所有PERFECT音符获得 <span class="let">{0}</span>% 的分数加成""",
+    2: """使所有PERFECT/GREAT音符获得 <span class="let">{0}</span>% 的分数加成""",
+    3: """使所有PERFECT/GREAT/NICE音符获得 <span class="let">{0}</span>% 的分数加成""", #provisional
+    4: """获得额外的 <span class="let">{0}</span>% 的COMBO加成""",
+    5: """使所有GREAT音符改判为PERFECT""",
+    6: """使所有GREAT/NICE音符改判为PERFECT""",
+    7: """使所有GREAT/NICE/BAD音符改判为PERFECT""",
+    8: """所有音符改判为PERFECT""", #provisional
+    9: """使NICE音符不会中断COMBO""",
+    10: """使BAD/NICE音符不会中断COMBO""", #provisional
+    11: """使你的COMBO不会中断""", #provisional
+    12: """使你的生命不会减少""",
+    13: """使所有音符恢复你 <span class="let">{0}</span> 点生命""", #provisional
+    14: """消耗 <span class="let">{1}</span> 生命，PERFECT音符获得 <span class="let">{0}</span>% 的分数加成，并且NICE/BAD音符不会中断COMBO""",
+    17: """使所有PERFECT音符恢复你 <span class="let">{0}</span> 点生命""",
+    18: """使所有PERFECT/GREAT音符恢复你 <span class="let">{0}</span> 点生命""", #provisional
+    19: """使所有PERFECT/GREAT/NICE音符恢复你 <span class="let">{0}</span> 点生命""", #provisional
 }
 
 REMOVE_HTML = re.compile(r"</?span[^>]*>")
@@ -81,30 +81,30 @@ def describe_skill_html(skill):
 
     effect_clause = SKILL_DESCRIPTIONS.get(
         skill.skill_type, "").format(effect_val, skill.skill_trigger_value)
-    interval_clause = """Every <span class="let">{0}</span> seconds:""".format(
+    interval_clause = """每 <span class="let">{0}</span> 秒，""".format(
         fire_interval)
-    probability_clause = """there is a <span class="var">{0}</span>% chance that""".format(
+    probability_clause = """有 <span class="var">{0}</span>% 的几率""".format(
         skill.chance())
-    length_clause = """for <span class="var">{0}</span> seconds.""".format(
+    length_clause = """，持续 <span class="var">{0}</span> 秒。""".format(
         skill.dur())
 
-    return " ".join((interval_clause, probability_clause, effect_clause, length_clause))
+    return "".join((interval_clause, probability_clause, effect_clause, length_clause))
 
 
 LEADER_SKILL_TARGET = {
-    1: "all Cute",
-    2: "all Cool",
-    3: "all Passion",
-    4: "all",
+    1: "所有Cute",
+    2: "所有Cool",
+    3: "所有Passion",
+    4: "所有",
 }
 
 LEADER_SKILL_PARAM = {
-    1: "the Vocal appeal",
-    2: "the Visual appeal",
-    3: "the Dance appeal",
-    4: "all appeals",
-    5: "the life",
-    6: "the skill probability",
+    1: "Vocal表现值",
+    2: "Visual表现值",
+    3: "Dance表现值",
+    4: "所有表现值",
+    5: "生命",
+    6: "特技发动几率",
 }
 
 def describe_lead_skill_html(skill):
@@ -115,7 +115,7 @@ def describe_lead_skill_html(skill):
         target_attr = LEADER_SKILL_TARGET.get(skill.target_attribute, "<unknown>")
         target_param = LEADER_SKILL_PARAM.get(skill.target_param, "<unknown>")
 
-        effect_clause = """Raises {0} of {1} members by <span class="let">{2}</span>%""".format(
+        effect_clause = """提升{1}偶像的{0} <span class="let">{2}</span>%。""".format(
             target_param, target_attr, skill.up_value)
 
         need_list = []
@@ -127,14 +127,14 @@ def describe_lead_skill_html(skill):
             need_list.append("Passion")
 
         if need_list:
-            need_str = ", ".join(need_list[:-1])
-            need_str = "{0}, and {1}".format(need_str, need_list[-1])
-            predicate_clause = """when there are {0} idols on the team.""".format(need_str)
-            built = " ".join((effect_clause, predicate_clause))
+            need_str = "、".join(need_list[:-1])
+            need_str = "{0}和{1}".format(need_str, need_list[-1])
+            predicate_clause = """当{0}属性的偶像存在于队伍时，""".format(need_str)
+            built = "".join((predicate_clause, effect_clause))
         else:
-            built = effect_clause + "."
+            built = effect_clause
         return built
     else:
-        return """I don't know how to describe this leader skill. Please report this as a bug. (up_type: {0}, type: {1})""".format(
+        return """此队长技能的内部描述格式未定义，请将此汇报为BUG。(up_type: {0}, type: {1})""".format(
             skill.up_type, skill.type
         )
