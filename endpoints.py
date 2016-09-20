@@ -16,6 +16,9 @@ import webutil
 
 @route(r"/([0-9]+-[0-9]+-[0-9]+)?")
 class Home(HandlerSyncedWithMaster):
+    def head(self, pretend_date):
+        return self.get(pretend_date)
+
     def get(self, pretend_date):
         if pretend_date:
             now = pytz.utc.localize(datetime.strptime(pretend_date, "%Y-%m-%d"))
@@ -31,13 +34,12 @@ class Home(HandlerSyncedWithMaster):
         gachas = starlight.data.gachas(now)
         gacha_limited = starlight.data.limited_availability_cards(gachas)
 
-        recent_history = self.settings["tle"].get_history(5)
+        recent_history = self.settings["tle"].get_history(10)
 
         # cache priming has a high overhead so prime all icons at once
         preprime_set = set()
-        for h in [x.asdict() for x in recent_history]:
-            for k in ["n", "r", "sr", "ssr", "event"]:
-                preprime_set.update(h.get(k, ()))
+        for h in recent_history:
+            preprime_set.update(h.card_list())
         starlight.data.cards(preprime_set)
 
         self.render("main.html", history=recent_history,
@@ -325,9 +327,8 @@ class History(HandlerSyncedWithMaster):
         all_history = self.settings["tle"].get_history(nent=None)
 
         preprime_set = set()
-        for h in [x.asdict() for x in all_history]:
-            for k in ["n", "r", "sr", "ssr", "event"]:
-                preprime_set.update(h.get(k, ()))
+        for h in all_history:
+            preprime_set.update(h.card_list())
         starlight.data.cards(preprime_set)
 
         self.render("history.html", history=all_history, **self.settings)
@@ -349,7 +350,7 @@ class DebugGachaPresenceUpdate(tornado.web.RequestHandler):
         self.write("ok")
 
 @route(r"/tl_debug")
-#@dev_mode_only
+@dev_mode_only
 class DebugViewTLs(tornado.web.RequestHandler):
     def get(self):
         #chara_id = int(chara_id)
@@ -374,3 +375,25 @@ class DebugViewTLExtreme(tornado.web.RequestHandler):
         self.render("debug_view_database.html", data=gen,
                     fields=fields, **self.settings)
 
+@route(r"/clear_remote_cache")
+@dev_mode_only
+class DebugKillCache(tornado.web.RequestHandler):
+    def get(self):
+        self.settings["tle"].kill_caches(0)
+        starlight.data = starlight.DataCache(starlight.data.version)
+
+        self.write("ok.")
+
+@route(r"/ping")
+class Ping(tornado.web.RequestHandler):
+    def head(self):
+        return
+
+    def get(self):
+        self.write("{} {} {} {} {}".format(
+            starlight.data.version,
+            starlight.last_version_check,
+            len(starlight.data.card_cache),
+            len(starlight.data.char_cache),
+            "It's working"
+        ))

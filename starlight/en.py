@@ -1,7 +1,6 @@
 import csvloader
 import functools
 import os
-import enums
 import re
 
 NO_STRING_FMT = "<语音 ID {0}:6:{1} 没有预设文本，但是你仍然可提交它的翻译。>"
@@ -92,13 +91,29 @@ def describe_skill_html(skill):
     return "".join((interval_clause, probability_clause, effect_clause, length_clause))
 
 
+LEADER_SKILL_TARGET = {
+    1: "所有Cute",
+    2: "所有Cool",
+    3: "所有Passion",
+    4: "所有",
+}
+
+LEADER_SKILL_PARAM = {
+    1: "Vocal表现值",
+    2: "Visual表现值",
+    3: "Dance表现值",
+    4: "所有表现值",
+    5: "生命",
+    6: "特技发动几率",
+}
+
 def describe_lead_skill_html(skill):
     if skill is None:
         return "No effect"
 
     if skill.up_type == 1 and skill.type == 20:
-        target_attr = enums.lskill_target(skill.target_attribute)
-        target_param = enums.lskill_param(skill.target_param)
+        target_attr = LEADER_SKILL_TARGET.get(skill.target_attribute, "<unknown>")
+        target_param = LEADER_SKILL_PARAM.get(skill.target_param, "<unknown>")
 
         effect_clause = """提升{1}偶像的{0} <span class="let">{2}</span>%。""".format(
             target_param, target_attr, skill.up_value)

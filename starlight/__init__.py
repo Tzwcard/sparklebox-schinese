@@ -538,16 +538,11 @@ def do_preswitch_tasks(new_db_path, old_db_path):
         new_db_path,
         transient_data_path("names.csv")])
 
+    if not os.getenv("DISABLE_HISTORY_UPDATES", None):
+        subprocess.call(["toolchain/update_rich_history.py", new_db_path])
+
     if old_db_path:
-        if not os.getenv("DISABLE_HISTORY_UPDATES", None):
-            history_json = subprocess.check_output(["toolchain/make_diff.py",
-                old_db_path,
-                new_db_path])
-            if history_json:
-                models.TranslationSQL(use_satellite=1).push_history(os.path.getmtime(new_db_path), history_json)
-        subprocess.call(["toolchain/make_contiguous_gacha.py",
-            old_db_path,
-            new_db_path])
+        subprocess.call(["toolchain/make_contiguous_gacha.py", old_db_path, new_db_path])
 
 def update_to_res_ver(res_ver):
     global is_updating_to_new_truth
@@ -624,11 +619,16 @@ data = None
 def init():
     global data
     available_mdbs = sorted(list(filter(lambda x: x.endswith(".mdb"), os.listdir(transient_data_path()))), reverse=1)
-    if available_mdbs:
-        try:
-            explicit_vers = int(sys.argv[1])
-        except (ValueError, IndexError):
+
+    try:
+        explicit_vers = int(sys.argv[1])
+    except (ValueError, IndexError):
+        if available_mdbs:
             explicit_vers = available_mdbs[0].split(".")[0]
+        else:
+            explicit_vers = 0
+
+    if explicit_vers and os.path.exists(transient_data_path("{0}.mdb".format(explicit_vers))):
         print("Loading mdb:", explicit_vers)
         data = DataCache(explicit_vers)
     else:
