@@ -1,8 +1,12 @@
 <footer>
-    <small>truth version {{ starlight.data.version }} opened at {{ starlight.data.load_date_jst }}<br>
+    <small>render time (so far): {{ request.request_time() * 1000 }} (ms)<br>
+       --- the information below is only useful for devs, please ignore it ---<br><br>
+
+           truth version {{ starlight.data.version }},
+           opened at {{ starlight.data.load_date }},
+           app version {{ starlight.display_app_ver() }}<br>
            did this page trigger a versioncheck? {{ "yes" if starlight.data.vc_this else "no" }}<br>
            did this page generate primes? {{ starlight.data.primed_this }}<br>
-           render time (so far): {{ request.request_time() * 1000 }} (ms)
            {% if starlight.is_updating_to_new_truth %}
            <br>checking for truth updates... performance may be degraded for a few seconds.
            {% end %}
@@ -10,7 +14,7 @@
     <small>Report bugs/suggest features on <a href="https://github.com/summertriangle-dev/sparklebox">GitHub</a><br>
     <small>中文翻译分支维护：<a href="https://github.com/CaiMiao/sparklebox-schinese">GitHub</a> / 
 	<a href="https://deresute.me/243803619">CGSS ID: 243803619</a></small><br>
-    <small>该站的所有者并未申请该页面下任何内容的所有权。</small>
+    <small>该站的所有者并未声明拥有该页面下任何内容的所有权。</small>
 </footer>
 <script>
   (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
