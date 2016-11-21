@@ -3,7 +3,7 @@ import functools
 import os
 import re
 
-NO_STRING_FMT = "<语音 ID {0}:6:{1} 没有预设文本，但是你仍然可提交它的翻译。>"
+NO_STRING_FMT = "<语音 ID {0}:{1}:{2} 没有预设文本，但是你仍然可提交它的翻译。>"
 
 def westernized_name(chara):
     """Our conventionals are ordered Last First, but project-imas uses First Last."""
@@ -109,7 +109,7 @@ LEADER_SKILL_PARAM = {
 
 def describe_lead_skill_html(skill):
     if skill is None:
-        return "No effect"
+        return "无"
 
     if skill.up_type == 1 and skill.type == 20:
         target_attr = LEADER_SKILL_TARGET.get(skill.target_attribute, "<unknown>")
