@@ -53,6 +53,8 @@ skill_type = enum([
     17, "恢复生命",
     18, "恢复生命",
     19, "恢复生命",
+
+    24, "全才"
 ])
 
 skill_probability = enum([
@@ -147,6 +149,8 @@ skill_class = enum([
     17, "s_heal",
     18, "s_heal",
     19, "s_heal",
+
+    24, "s_allround",
 ])
 
 stat_dot = enum([

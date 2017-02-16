@@ -59,6 +59,7 @@ SKILL_DESCRIPTIONS = {
     17: """使所有PERFECT音符恢复你 <span class="let">{0}</span> 点生命""",
     18: """使所有PERFECT/GREAT音符恢复你 <span class="let">{0}</span> 点生命""", #provisional
     19: """使所有PERFECT/GREAT/NICE音符恢复你 <span class="let">{0}</span> 点生命""", #provisional
+    24: """获得额外的 <span class="let">{0}</span>% 的COMBO加成，并使所有PERFECT音符恢复你 <span class="let">{2}</span> 点生命""",
 }
 
 REMOVE_HTML = re.compile(r"</?span[^>]*>")
@@ -76,11 +77,11 @@ def describe_skill_html(skill):
     fire_interval = skill.condition
     effect_val = skill.value
     # TODO symbols
-    if skill.skill_type in [1, 2, 3, 4, 14]:
+    if skill.skill_type in [1, 2, 3, 4, 14, 24]:
         effect_val -= 100
 
     effect_clause = SKILL_DESCRIPTIONS.get(
-        skill.skill_type, "").format(effect_val, skill.skill_trigger_value)
+        skill.skill_type, "").format(effect_val, skill.skill_trigger_value, skill.value_2)
     interval_clause = """每 <span class="let">{0}</span> 秒，""".format(
         fire_interval)
     probability_clause = """有 <span class="var">{0}</span>% 的几率""".format(
