@@ -50,6 +50,9 @@ skill_type = enum([
     13, "无条件补血",
     14, "过载",
 
+    15, "精致PERFECT",
+    16, "模仿",
+
     17, "恢复生命",
     18, "恢复生命",
     19, "恢复生命",
@@ -145,6 +148,9 @@ skill_class = enum([
     12, "s_life",
     13, "s_heal",
     14, "s_overload",
+
+    15, "s_perfelegant",
+    16, "s_mimic",
 
     17, "s_heal",
     18, "s_heal",
